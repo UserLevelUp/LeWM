@@ -850,7 +850,10 @@ export class PinLayoutEditorComponent implements OnInit, OnDestroy {
    * @returns The orientation angle in degrees
    */
   private getEffectiveTextOrientation(pin: Pin): number {
-    if (!pin.textStyle.followConnection) {
+    // Defensive check for the new property
+    const followConnection = pin.textStyle?.followConnection || false;
+    
+    if (!followConnection) {
       return pin.textStyle.orientation || 0;
     }
     

@@ -1105,7 +1105,10 @@ export class GraphEditorComponent implements OnInit, OnDestroy, AfterViewInit {
    * @returns The orientation angle in degrees
    */
   getEffectiveTextOrientation(pin: Pin, node: GraphNode): number {
-    if (!pin.textStyle.followConnection) {
+    // Defensive check for the new property
+    const followConnection = pin.textStyle?.followConnection || false;
+    
+    if (!followConnection) {
       return pin.textStyle.orientation || 0;
     }
     
