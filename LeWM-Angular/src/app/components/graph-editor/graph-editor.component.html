@@ -233,7 +233,7 @@
                     [attr.fill]="pin.isSelected ? '#FF8C00' : pin.textStyle.color"
                     [attr.text-anchor]="pin.textStyle.alignment"
                     [attr.dominant-baseline]="pin.textStyle.verticalAlignment === 'middle' ? 'central' : pin.textStyle.verticalAlignment"
-                    [attr.transform]="pin.textStyle.orientation !== 0 ? 'rotate(' + pin.textStyle.orientation + ' ' + calculatePinTextPosition(pin, node).x + ' ' + calculatePinTextPosition(pin, node).y + ')' : ''"
+                    [attr.transform]="getEffectiveTextOrientation(pin, node) !== 0 ? 'rotate(' + getEffectiveTextOrientation(pin, node) + ' ' + calculatePinTextPosition(pin, node).x + ' ' + calculatePinTextPosition(pin, node).y + ')' : ''"
                     class="pin-label enhanced-pin-label selected-pin-label">
                 {{ pin.label }}
               </text>

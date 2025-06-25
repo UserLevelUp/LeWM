@@ -373,4 +373,19 @@ export class GraphStateService {
     this._edges.next(this.defaultEdges);
     console.log('🔄 Reset to default data');
   }
+
+  /**
+   * Get connections for a specific pin
+   * @param nodeId The ID of the node
+   * @param pinName The name of the pin
+   * @returns Array of GraphEdge objects connected to this pin
+   */
+  getConnectionsForPin(nodeId: string, pinName: string): GraphEdge[] {
+    const currentEdges = this._edges.getValue();
+    const pinReference = `${nodeId}.${pinName}`;
+    
+    return currentEdges.filter(edge => 
+      edge.from === pinReference || edge.to === pinReference
+    );
+  }
 }

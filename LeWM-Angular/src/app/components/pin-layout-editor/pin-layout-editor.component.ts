@@ -761,7 +761,7 @@ export class PinLayoutEditorComponent implements OnInit, OnDestroy {
    */
   getPinTextTransform(pin: Pin): string {
     const pos = this.getAbsolutePinPosition(pin);
-    const rotation = pin.textStyle?.orientation || 0;
+    const rotation = this.getEffectiveTextOrientation(pin);
     
     if (rotation === 0) {
       return '';
@@ -797,6 +797,70 @@ export class PinLayoutEditorComponent implements OnInit, OnDestroy {
     this.previewZoom = 1.0;
     this.previewOffset = { x: 0, y: 0 };
     console.log('Preview view reset');
+  }
+
+  /**
+   * Calculate the angle of a connection line from a pin
+   * @param pin The pin to calculate angle for
+   * @returns The angle in degrees, or null if no connections found
+   */
+  private calculateConnectionAngle(pin: Pin): number | null {
+    const connections = this.graphStateService.getConnectionsForPin(pin.nodeId, pin.id.split('.')[1]);
+    
+    if (connections.length === 0) {
+      return null;
+    }
+
+    // Use the first connection found
+    const connection = connections[0];
+    const pinPos = this.getAbsolutePinPosition(pin);
+    
+    // Determine which end of the connection this pin is
+    const thisPinRef = `${pin.nodeId}.${pin.id.split('.')[1]}`;
+    let otherPinRef: string;
+    
+    if (connection.from === thisPinRef) {
+      otherPinRef = connection.to;
+    } else {
+      otherPinRef = connection.from;
+    }
+    
+    // Get the position of the other pin
+    const [otherNodeId, otherPinName] = otherPinRef.split('.');
+    const otherPinPos = this.graphStateService.getPinPosition(otherNodeId, otherPinName);
+    
+    if (!otherPinPos) {
+      return null;
+    }
+    
+    // Calculate angle from this pin to the other pin
+    const deltaX = otherPinPos.x - pinPos.x;
+    const deltaY = otherPinPos.y - pinPos.y;
+    
+    // Convert to degrees (0 degrees is rightward, positive is clockwise)
+    const angleRadians = Math.atan2(deltaY, deltaX);
+    const angleDegrees = angleRadians * (180 / Math.PI);
+    
+    return angleDegrees;
+  }
+
+  /**
+   * Get effective text orientation considering connection alignment
+   * @param pin The pin to get orientation for
+   * @returns The orientation angle in degrees
+   */
+  private getEffectiveTextOrientation(pin: Pin): number {
+    if (!pin.textStyle.followConnection) {
+      return pin.textStyle.orientation || 0;
+    }
+    
+    const connectionAngle = this.calculateConnectionAngle(pin);
+    if (connectionAngle === null) {
+      // No connections found, fall back to manual orientation
+      return pin.textStyle.orientation || 0;
+    }
+    
+    return connectionAngle;
   }
 
 }

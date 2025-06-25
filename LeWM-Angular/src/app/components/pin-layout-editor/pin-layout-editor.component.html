@@ -204,8 +204,15 @@
                 Rotation:
                 <input type="range" min="0" max="360"
                        [value]="pin.textStyle.orientation"
+                       [disabled]="pin.textStyle.followConnection"
                        (input)="updatePinTextStyle(pin.id, 'orientation', +$any($event.target).value)" />
                 <span>{{ pin.textStyle.orientation }}°</span>
+              </label>
+              <label>
+                <input type="checkbox" 
+                       [checked]="pin.textStyle.followConnection"
+                       (change)="updatePinTextStyle(pin.id, 'followConnection', $any($event.target).checked)" />
+                Follow Connection Line
               </label>
             </div>
             <div class="control-row">

@@ -17,6 +17,7 @@ export interface PinTextStyle {
   backgroundColor: string;
   showBackground: boolean;
   textAlign: 'left' | 'center' | 'right';
+  followConnection: boolean; // align text with connection line direction
 }
 
 export interface PinStyle {
@@ -68,7 +69,8 @@ export const DEFAULT_PIN_TEXT_STYLE: PinTextStyle = {
   offset: { x: 0, y: 0 },
   backgroundColor: '#ffffff',
   showBackground: false,
-  textAlign: 'left'
+  textAlign: 'left',
+  followConnection: false
 };
 
 export const DEFAULT_PIN_STYLE: PinStyle = {

@@ -1052,6 +1052,72 @@ export class GraphEditorComponent implements OnInit, OnDestroy, AfterViewInit {
     return this.currentMode?.name || '';
   }
 
+  /**
+   * Calculate the angle of a connection line from a pin
+   * @param pin The pin to calculate angle for
+   * @param node The node containing the pin
+   * @returns The angle in degrees, or null if no connections found
+   */
+  private calculateConnectionAngle(pin: Pin, node: GraphNode): number | null {
+    const connections = this.graphState.getConnectionsForPin(pin.nodeId, pin.id.split('.')[1]);
+    
+    if (connections.length === 0) {
+      return null;
+    }
+
+    // Use the first connection found
+    const connection = connections[0];
+    const pinPos = this.calculatePinPosition(pin, node);
+    
+    // Determine which end of the connection this pin is
+    const thisPinRef = `${pin.nodeId}.${pin.id.split('.')[1]}`;
+    let otherPinRef: string;
+    
+    if (connection.from === thisPinRef) {
+      otherPinRef = connection.to;
+    } else {
+      otherPinRef = connection.from;
+    }
+    
+    // Get the position of the other pin
+    const [otherNodeId, otherPinName] = otherPinRef.split('.');
+    const otherPinPos = this.graphState.getPinPosition(otherNodeId, otherPinName);
+    
+    if (!otherPinPos) {
+      return null;
+    }
+    
+    // Calculate angle from this pin to the other pin
+    const deltaX = otherPinPos.x - pinPos.x;
+    const deltaY = otherPinPos.y - pinPos.y;
+    
+    // Convert to degrees (0 degrees is rightward, positive is clockwise)
+    const angleRadians = Math.atan2(deltaY, deltaX);
+    const angleDegrees = angleRadians * (180 / Math.PI);
+    
+    return angleDegrees;
+  }
+
+  /**
+   * Get effective text orientation considering connection alignment
+   * @param pin The pin to get orientation for
+   * @param node The node containing the pin
+   * @returns The orientation angle in degrees
+   */
+  getEffectiveTextOrientation(pin: Pin, node: GraphNode): number {
+    if (!pin.textStyle.followConnection) {
+      return pin.textStyle.orientation || 0;
+    }
+    
+    const connectionAngle = this.calculateConnectionAngle(pin, node);
+    if (connectionAngle === null) {
+      // No connections found, fall back to manual orientation
+      return pin.textStyle.orientation || 0;
+    }
+    
+    return connectionAngle;
+  }
+
   // Resize functionality methods
   onResizeStart(): void {
     this.resizeStartWidth = this.toolbarWidth;
