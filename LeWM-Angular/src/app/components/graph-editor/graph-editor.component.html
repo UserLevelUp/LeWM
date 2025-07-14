@@ -38,6 +38,26 @@
         </button>
       </div>
 
+      <!-- Pin Selection Mode Toggle -->
+      <div class="pin-selection-mode">
+        <h4>Pin Selection Mode</h4>
+        <button
+          (click)="togglePinSelectionMode()"
+          (keydown.enter)="togglePinSelectionMode()"
+          [class]="pinSelectionMode ? 'pin-mode-btn active' : 'pin-mode-btn'"
+          title="Toggle pin selection mode with reference rectangles">
+          {{ pinSelectionMode ? 'Pin Mode: ON' : 'Pin Mode: OFF' }}
+        </button>
+        <div class="pin-mode-info" *ngIf="pinSelectionMode">
+          <div class="info-box">
+            <p><strong>Pin Mode Active:</strong></p>
+            <p>• Hover over pins or reference rectangles</p>
+            <p>• Reference rectangles become elevated</p>
+            <p>• Click rectangles to interact with pins</p>
+          </div>
+        </div>
+      </div>
+
       <!-- File Mode Toolbar -->
       <div class="file-toolbar" *ngIf="currentModeName === 'file'">
         <h3>File Operations</h3>
@@ -227,7 +247,10 @@
                     [attr.data-node-id]="node.id"
                     [attr.data-pin-name]="pin.name"
                     class="pin-circle"
-                    style="pointer-events: none; transition: all 0.2s ease-in-out;" />
+                    style="cursor: pointer; transition: all 0.2s ease-in-out;"
+                    (mouseenter)="onPinMouseEnter(node.id, pin.name)"
+                    (mouseleave)="onPinMouseLeave()"
+                    (click)="onPinMouseDown($event, node.id, pin.name)" />
             
             <!-- Pin label -->
             <text *ngIf="!isPinSelectedInEnhancedMode(node.id, pin.name)"
@@ -276,6 +299,28 @@
                 {{ pin.label }}
               </text>
             </g>
+          </g>
+        </g>
+      </g>
+      
+      <!-- Pin reference rectangles - rendered after components to be on top -->
+      <g *ngIf="pinSelectionMode" class="pin-reference-rectangles">
+        <g *ngFor="let node of nodes$ | async">
+          <g *ngIf="node.pins" class="node-reference-rectangles">
+            <rect *ngFor="let pin of node.pins"
+                  [attr.x]="node.x + pin.x - 8"
+                  [attr.y]="node.y + pin.y - 8"
+                  width="16"
+                  height="16"
+                  fill="rgba(74, 144, 226, 0.3)"
+                  stroke="rgba(74, 144, 226, 0.6)"
+                  [attr.stroke-width]="isReferenceRectHovered(node.id, pin.name) ? '2' : '1'"
+                  [style.opacity]="isReferenceRectHovered(node.id, pin.name) ? '0.8' : '0.4'"
+                  [style.cursor]="'pointer'"
+                  [style.transition]="'all 0.2s ease-in-out'"
+                  (mouseenter)="onReferenceRectMouseEnter(node.id, pin.name)"
+                  (mouseleave)="onReferenceRectMouseLeave()"
+                  (click)="onReferenceRectClick($event, node.id, pin.name)" />
           </g>
         </g>
       </g>

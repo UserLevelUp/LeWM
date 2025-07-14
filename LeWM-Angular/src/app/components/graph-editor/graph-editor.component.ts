@@ -109,6 +109,10 @@ export class GraphEditorComponent implements OnInit, OnDestroy, AfterViewInit {
   // Pin hover state for better selection targeting
   hoveredPin: { nodeId: string; pinName: string } | null = null;
   
+  // Pin selection mode state (matching React implementation)
+  pinSelectionMode = false;
+  hoveredReferenceRect: { nodeId: string; pinName: string } | null = null;
+  
   // Central reference area for pin interactions
   private centralReferenceArea = { x: 0, y: 0, width: 0, height: 0 };
   
@@ -1244,6 +1248,55 @@ export class GraphEditorComponent implements OnInit, OnDestroy, AfterViewInit {
   onNodeBatchDialogCancelled(): void {
     this.showNodeBatchDialog = false;
     this.selectedNodesForBatchEdit = [];
+  }
+
+  // Pin Selection Mode methods (ported from React implementation)
+  togglePinSelectionMode(): void {
+    this.pinSelectionMode = !this.pinSelectionMode;
+    if (!this.pinSelectionMode) {
+      // Clear hover states when disabling
+      this.hoveredPin = null;
+      this.hoveredReferenceRect = null;
+    }
+  }
+
+  onPinMouseEnter(nodeId: string, pinName: string): void {
+    this.hoveredPin = { nodeId, pinName };
+    if (this.pinSelectionMode) {
+      this.hoveredReferenceRect = { nodeId, pinName };
+    }
+  }
+
+  onPinMouseLeave(): void {
+    this.hoveredPin = null;
+    this.hoveredReferenceRect = null;
+  }
+
+  onReferenceRectMouseEnter(nodeId: string, pinName: string): void {
+    this.hoveredReferenceRect = { nodeId, pinName };
+    this.hoveredPin = { nodeId, pinName };
+  }
+
+  onReferenceRectMouseLeave(): void {
+    this.hoveredReferenceRect = null;
+    this.hoveredPin = null;
+  }
+
+  onReferenceRectClick(event: MouseEvent, nodeId: string, pinName: string): void {
+    event.stopPropagation();
+    console.log(`Pin reference rectangle clicked: ${nodeId}-${pinName}`);
+    // Handle pin interaction through reference rectangle
+    const node = this.currentNodes.find(n => n.id === nodeId);
+    if (node) {
+      const pin = node.pins?.find(p => p.name === pinName);
+      if (pin) {
+        this.onPinClick(node, pin, event);
+      }
+    }
+  }
+
+  isReferenceRectHovered(nodeId: string, pinName: string): boolean {
+    return this.hoveredReferenceRect?.nodeId === nodeId && this.hoveredReferenceRect?.pinName === pinName;
   }
 
   // File operations
