@@ -122,8 +122,8 @@
       </defs>
       <rect id="grid-rect" width="100%" height="100%" fill="url(#grid)" />
       
-      <!-- Central pin reference rectangle - handles all pin interactions -->
-      <rect *ngIf="currentMode?.name === 'pin-edit' || currentMode?.name === 'connection'"
+      <!-- Central pin reference rectangle - handles all pin interactions (disabled when Pin Selection Mode is ON) -->
+      <rect *ngIf="(currentMode?.name === 'pin-edit' || currentMode?.name === 'connection') && !pinSelectionMode"
             class="pin-reference-area"
             [attr.x]="getCentralReferenceArea().x"
             [attr.y]="getCentralReferenceArea().y"
@@ -247,10 +247,12 @@
                     [attr.data-node-id]="node.id"
                     [attr.data-pin-name]="pin.name"
                     class="pin-circle"
-                    style="cursor: pointer; transition: all 0.2s ease-in-out;"
-                    (mouseenter)="onPinMouseEnter(node.id, pin.name)"
-                    (mouseleave)="onPinMouseLeave()"
-                    (click)="onPinMouseDown($event, node.id, pin.name)" />
+                    [style.cursor]="pinSelectionMode ? 'default' : 'pointer'"
+                    [style.pointer-events]="pinSelectionMode ? 'none' : 'auto'"
+                    style="transition: all 0.2s ease-in-out;"
+                    (mouseenter)="!pinSelectionMode && onPinMouseEnter(node.id, pin.name)"
+                    (mouseleave)="!pinSelectionMode && onPinMouseLeave()"
+                    (click)="!pinSelectionMode && onPinMouseDown($event, node.id, pin.name)" />
             
             <!-- Pin label -->
             <text *ngIf="!isPinSelectedInEnhancedMode(node.id, pin.name)"
