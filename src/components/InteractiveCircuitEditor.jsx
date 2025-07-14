@@ -34,6 +34,9 @@ const InteractiveCircuitEditor = () => {
   const [selectionBox, setSelectionBox] = useState(null);
   const [isCtrlPressed, setIsCtrlPressed] = useState(false);
   const [initialPositions, setInitialPositions] = useState({});
+  const [pinSelectionMode, setPinSelectionMode] = useState(false);
+  const [hoveredPin, setHoveredPin] = useState(null);
+  const [hoveredReferenceRect, setHoveredReferenceRect] = useState(null);
   const svgRef = useRef(null);
 
   const availableComponents = [
@@ -213,6 +216,69 @@ const InteractiveCircuitEditor = () => {
     return [start, end];
   };
 
+  // Render reference rectangles for pin selection
+  const renderPinReferenceRectangles = () => {
+    if (!pinSelectionMode) return null;
+    
+    const allRectangles = [];
+    const hoveredRectangles = [];
+    
+    components.forEach(comp => {
+      if (!comp.pins || comp.pins.length === 0) return;
+      
+      comp.pins.forEach((pin, pinIndex) => {
+        const pinId = `${comp.id}-${pin.name}`;
+        const isHovered = hoveredPin === pinId || hoveredReferenceRect === pinId;
+        const rectSize = 16; // Size of the reference rectangle
+        const rectX = comp.x + pin.x - rectSize / 2;
+        const rectY = comp.y + pin.y - rectSize / 2;
+        
+        const rect = (
+          <rect
+            key={pinId}
+            x={rectX}
+            y={rectY}
+            width={rectSize}
+            height={rectSize}
+            fill="rgba(74, 144, 226, 0.3)"
+            stroke="rgba(74, 144, 226, 0.6)"
+            strokeWidth={isHovered ? "2" : "1"}
+            style={{
+              cursor: 'pointer',
+              opacity: isHovered ? 0.8 : 0.4,
+            }}
+            onMouseEnter={() => {
+              setHoveredReferenceRect(pinId);
+              setHoveredPin(pinId);
+            }}
+            onMouseLeave={() => {
+              setHoveredReferenceRect(null);
+              setHoveredPin(null);
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+              console.log(`Pin reference rectangle clicked: ${pinId}`);
+            }}
+          />
+        );
+        
+        if (isHovered) {
+          hoveredRectangles.push(rect);
+        } else {
+          allRectangles.push(rect);
+        }
+      });
+    });
+    
+    // Return non-hovered rectangles first, then hovered ones (so hovered are on top)
+    return (
+      <g>
+        {allRectangles}
+        {hoveredRectangles}
+      </g>
+    );
+  };
+
   const renderComponent = (comp) => {
     const isSelected = selectedComponents.has(comp.id);
     
@@ -252,8 +318,40 @@ const InteractiveCircuitEditor = () => {
             </text>
             {comp.pins?.map((pin, i) => (
               <g key={i}>
-                <circle cx={comp.x + pin.x} cy={comp.y + pin.y} r="2" fill="gold" stroke="#333" />
-                <text x={comp.x + pin.x + (pin.x < comp.width/2 ? -15 : 8)} y={comp.y + pin.y + 3} fontSize="6" textAnchor={pin.x < comp.width/2 ? "end" : "start"}>
+                <circle 
+                  cx={comp.x + pin.x} 
+                  cy={comp.y + pin.y} 
+                  r="2" 
+                  fill="gold" 
+                  stroke="#333"
+                  style={{ 
+                    cursor: 'pointer'
+                  }}
+                  onMouseEnter={() => {
+                    const pinId = `${comp.id}-${pin.name}`;
+                    setHoveredPin(pinId);
+                    if (pinSelectionMode) {
+                      setHoveredReferenceRect(pinId);
+                    }
+                  }}
+                  onMouseLeave={() => {
+                    setHoveredPin(null);
+                    setHoveredReferenceRect(null);
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    console.log(`Pin clicked: ${comp.id}-${pin.name}`);
+                  }}
+                />
+                <text 
+                  x={comp.x + pin.x + (pin.x < comp.width/2 ? -15 : 8)} 
+                  y={comp.y + pin.y + 3} 
+                  fontSize="6" 
+                  textAnchor={pin.x < comp.width/2 ? "end" : "start"}
+                  style={{
+                    pointerEvents: 'none'
+                  }}
+                >
                   {pin.name}
                 </text>
               </g>
@@ -600,6 +698,28 @@ const InteractiveCircuitEditor = () => {
         </div>
         
         <div className="mb-4">
+          <h4 className="font-semibold mb-2">Pin Selection Mode:</h4>
+          <button
+            onClick={() => setPinSelectionMode(!pinSelectionMode)}
+            className={`w-full px-3 py-2 rounded text-sm font-semibold ${
+              pinSelectionMode 
+                ? 'bg-green-500 text-white hover:bg-green-600' 
+                : 'bg-gray-500 text-white hover:bg-gray-600'
+            }`}
+          >
+            {pinSelectionMode ? 'Pin Mode: ON' : 'Pin Mode: OFF'}
+          </button>
+          {pinSelectionMode && (
+            <div className="bg-green-50 p-3 rounded text-xs mt-2">
+              <p><strong>Pin Mode Active:</strong></p>
+              <p>• Hover over pins or reference rectangles</p>
+              <p>• Reference rectangles become elevated</p>
+              <p>• Click rectangles to interact with pins</p>
+            </div>
+          )}
+        </div>
+        
+        <div className="mb-4">
           <h4 className="font-semibold mb-2">Add Components:</h4>
           <div className="grid grid-cols-1 gap-2">
             {availableComponents.map((comp, i) => (
@@ -721,6 +841,9 @@ const InteractiveCircuitEditor = () => {
               {renderComponent(comp)}
             </g>
           ))}
+          
+          {/* Pin reference rectangles - rendered after components to be on top */}
+          {renderPinReferenceRectangles()}
           
           {/* Selection box */}
           {selectionBox && (
