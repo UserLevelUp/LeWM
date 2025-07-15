@@ -3,7 +3,7 @@
 # LeWM - Level With Me
 ## A Type-Safe Visual Graph Editor
 
-**🌐 Live Demo:** [View on GitHub Pages](https://marcnoon.github.io/LeWM/)
+**🌐 Live Demo:** [View on GitHub Pages](https://userlevelup.github.io/LeWM/)
 
 **A visual-first, graph-aware application suite with type-safe architecture and modular design patterns.**
 
