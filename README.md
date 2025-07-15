@@ -41,6 +41,11 @@ The idea that node-pin-connection metaphor is that node is the root in the hiera
 
 ## 🚀 Quick Start
 
+### Issues
+All development work for issues is assumed to be for the Angular app in LeWM-Angular folder
+
+LLMs, codex, @copilot, claude, gemini, etc... please refer to .github\copilot-instruction.md for instructions.
+
 ### Angular Implementation (Recommended)
 The Angular application provides the most complete and type-safe implementation:
 
