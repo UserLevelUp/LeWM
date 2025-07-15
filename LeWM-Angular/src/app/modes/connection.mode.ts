@@ -240,6 +240,7 @@ export class ConnectionMode implements GraphMode {
       line.setAttribute('stroke-width', '3');
       line.setAttribute('stroke-dasharray', '5,5');
       line.setAttribute('opacity', '0.8');
+      line.setAttribute('pointer-events', 'none');
       overlay.appendChild(line);
     }
     

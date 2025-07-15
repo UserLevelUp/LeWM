@@ -139,7 +139,8 @@
               [attr.stroke-dasharray]="getStrokeDashArray(edge)"
               [attr.marker-end]="getMarkerEnd(edge)"
               [attr.marker-start]="getMarkerStart(edge)"
-              [attr.opacity]="edge.isSelected ? 1 : 0.8" />
+              [attr.opacity]="edge.isSelected ? 1 : 0.8"
+              [attr.pointer-events]="currentModeName === 'connection' ? 'none' : 'stroke'" />
         
         <!-- Connection label -->
         <text *ngIf="edge.label"
