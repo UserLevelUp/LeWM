@@ -9,6 +9,8 @@
 
 LeWM is a sophisticated node-pin-connection editor built with modern web technologies, designed for developers who value type safety, clean architecture, and extensible design patterns. Create interactive graphs, manage complex connections, and leverage advanced editing modes—all while maintaining strict TypeScript standards and comprehensive test coverage.
 
+The idea that node-pin-connection metaphor is that node is the root in the hierachy, then one or more pin/pins which is placed on the perimeter of the node somewhere, then finally the connection link one or two more pins together functionally as the last piece in the hierarchy.  Currently you can't select a single pin and loop it on itself on a single node, but it is planned for in the future, and the connection algorithm will need to get more sophisticated before that happens.
+
 ## Why LeWM?
 
 ### 🔒 **Type-Safe Architecture**
