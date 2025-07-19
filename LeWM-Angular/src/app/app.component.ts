@@ -5,7 +5,6 @@ import { FeatureGraphService } from './services/feature-graph.service';
 import { ModeManagerService } from './services/mode-manager.service';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { GraphEditorComponent } from './components/graph-editor/graph-editor.component';
 import { HandleComponent } from './components/handle/handle';
 
 @Component({
@@ -15,7 +14,6 @@ import { HandleComponent } from './components/handle/handle';
   imports: [
     CommonModule,
     RouterModule,
-    GraphEditorComponent,
     HandleComponent
   ],
   styleUrl: './app.component.scss'
