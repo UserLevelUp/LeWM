@@ -3,6 +3,7 @@ import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { GraphEditorComponent } from '../components/graph-editor/graph-editor.component';
 import { GraphStateService } from '../services/graph-state.service';
 import { PinStateService } from '../services/pin-state.service';
+import { ConnectionStateService } from '../services/connection-state.service';
 import { FileService } from '../services/file.service';
 import { FileMode, GraphData } from '../modes/file.mode';
 import { GraphEdge } from '../models/graph-edge.model';
@@ -23,6 +24,7 @@ describe('FileMode Integration Tests', () => {
       providers: [
         GraphStateService,
         PinStateService,
+        ConnectionStateService,
         { provide: FileService, useValue: fileServiceSpy }
       ]
     }).compileComponents();
