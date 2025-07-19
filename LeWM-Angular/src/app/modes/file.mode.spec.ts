@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { FileMode, GraphData } from './file.mode';
 import { GraphStateService } from '../services/graph-state.service';
 import { PinStateService } from '../services/pin-state.service';
+import { ConnectionStateService } from '../services/connection-state.service';
 import { FileService } from '../services/file.service';
 import { GraphEdge } from '../models/graph-edge.model';
 import { GraphNode } from '../models/graph-node.model';
@@ -337,11 +338,29 @@ describe('FileMode', () => {
   });
 
   describe('Real Integration Test', () => {
+    let realFileMode: FileMode;
+    let realGraphState: GraphStateService;
+    let realPinState: PinStateService;
+
+    beforeEach(() => {
+      // Configure TestBed with real services for integration test
+      TestBed.resetTestingModule();
+      TestBed.configureTestingModule({
+        providers: [
+          GraphStateService,
+          PinStateService,
+          ConnectionStateService,
+          { provide: FileService, useValue: mockFileService }
+        ]
+      });
+
+      realGraphState = TestBed.inject(GraphStateService);
+      realPinState = TestBed.inject(PinStateService);
+      realFileMode = new FileMode(realGraphState, realPinState, mockFileService);
+    });
+
     it('should verify import/export round-trip preserves all connection metadata', () => {
       // This test uses real services to ensure no properties are lost
-      const realGraphState = new GraphStateService();
-      const realPinState = new PinStateService();
-      const realFileMode = new FileMode(realGraphState, realPinState, mockFileService);
 
       const testGraphData: GraphData = {
         version: '1.0',

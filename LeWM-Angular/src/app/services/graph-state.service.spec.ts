@@ -1,13 +1,16 @@
 import { TestBed } from '@angular/core/testing';
 
 import { GraphStateService } from './graph-state.service';
+import { ConnectionStateService } from './connection-state.service';
 import { GraphEdge } from '../models/graph-edge.model';
 
 describe('GraphStateService', () => {
   let service: GraphStateService;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({});
+    TestBed.configureTestingModule({
+      providers: [ConnectionStateService]
+    });
     service = TestBed.inject(GraphStateService);
   });
 
