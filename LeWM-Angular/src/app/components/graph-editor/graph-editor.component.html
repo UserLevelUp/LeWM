@@ -33,9 +33,6 @@
         <button (click)="switchToPinEditMode()" (keydown.enter)="switchToPinEditMode()" [class.active]="currentModeName === 'pin-edit'">
           Pin Edit (P)
         </button>
-        <button (click)="switchToConnectionMode()" (keydown.enter)="switchToConnectionMode()" [class.active]="currentModeName === 'connection'">
-          Connection (C)
-        </button>
         <button (click)="switchToFileMode()" (keydown.enter)="switchToFileMode()" [class.active]="currentModeName === 'file'">
           File (F)
         </button>
@@ -121,45 +118,19 @@
       
       <!-- Connection Lines -->
       <g *ngFor="let edge of edges$ | async" class="connection-line">
-        <!-- Selection/hover background line or path -->
-        <ng-container *ngIf="edge.isSelected || edge.isHighlighted">
-          <!-- Multi-segment routed path background -->
-          <polyline *ngIf="edge.isRouted && edge.routedPath && edge.routedPath.length > 0"
-                    [attr.points]="getRoutedPathPoints(edge)"
-                    [attr.stroke]="edge.isSelected ? '#4CAF50' : '#FF9800'"
-                    stroke-width="8"
-                    fill="none"
-                    opacity="0.3"
-                    pointer-events="none" />
-          
-          <!-- Simple line background for direct connections -->
-          <line *ngIf="!edge.isRouted"
-                [attr.x1]="getConnectionStartX(edge)" 
-                [attr.y1]="getConnectionStartY(edge)"
-                [attr.x2]="getConnectionEndX(edge)" 
-                [attr.y2]="getConnectionEndY(edge)"
-                [attr.stroke]="edge.isSelected ? '#4CAF50' : '#FF9800'"
-                stroke-width="8"
-                opacity="0.3"
-                pointer-events="none" />
-        </ng-container>
-        
-        <!-- Main connection line or path -->
-        <!-- Multi-segment routed path -->
-        <polyline *ngIf="edge.isRouted && edge.routedPath && edge.routedPath.length > 0"
-                  [attr.points]="getRoutedPathPoints(edge)"
-                  [attr.stroke]="edge.color || '#2196F3'"
-                  [attr.stroke-width]="edge.strokeWidth || 2"
-                  [attr.stroke-dasharray]="getStrokeDashArray(edge)"
-                  [attr.marker-end]="getMarkerEnd(edge)"
-                  [attr.marker-start]="getMarkerStart(edge)"
-                  [attr.opacity]="edge.isSelected ? 1 : 0.8"
-                  [attr.pointer-events]="currentModeName === 'connection' ? 'none' : 'stroke'"
-                  fill="none" />
-        
-        <!-- Simple line for direct connections -->
-        <line *ngIf="!edge.isRouted"
+        <!-- Selection/hover background line -->
+        <line *ngIf="edge.isSelected || edge.isHighlighted"
               [attr.x1]="getConnectionStartX(edge)" 
+              [attr.y1]="getConnectionStartY(edge)"
+              [attr.x2]="getConnectionEndX(edge)" 
+              [attr.y2]="getConnectionEndY(edge)"
+              [attr.stroke]="edge.isSelected ? '#4CAF50' : '#FF9800'"
+              stroke-width="8"
+              opacity="0.3"
+              pointer-events="none" />
+        
+        <!-- Main connection line -->
+        <line [attr.x1]="getConnectionStartX(edge)" 
               [attr.y1]="getConnectionStartY(edge)"
               [attr.x2]="getConnectionEndX(edge)" 
               [attr.y2]="getConnectionEndY(edge)"
@@ -173,8 +144,8 @@
         
         <!-- Connection label -->
         <text *ngIf="edge.label"
-              [attr.x]="getConnectionMidpointX(edge)"
-              [attr.y]="getConnectionMidpointY(edge) - 5"
+              [attr.x]="(getConnectionStartX(edge) + getConnectionEndX(edge)) / 2"
+              [attr.y]="(getConnectionStartY(edge) + getConnectionEndY(edge)) / 2 - 5"
               text-anchor="middle"
               font-size="10"
               [attr.fill]="edge.color || '#333'"
@@ -186,8 +157,8 @@
         <!-- Value labels -->
         <g *ngIf="edge.values && edge.values.length > 0" class="connection-values">
           <text *ngFor="let value of edge.values; let i = index"
-                [attr.x]="getConnectionMidpointX(edge)"
-                [attr.y]="getConnectionMidpointY(edge) + 10 + (i * 12)"
+                [attr.x]="(getConnectionStartX(edge) + getConnectionEndX(edge)) / 2"
+                [attr.y]="(getConnectionStartY(edge) + getConnectionEndY(edge)) / 2 + 10 + (i * 12)"
                 text-anchor="middle"
                 font-size="8"
                 fill="#666"
