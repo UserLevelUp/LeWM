@@ -3,6 +3,7 @@ import { GraphMode } from '../interfaces/graph-mode.interface';
 import { GraphNode } from '../models/graph-node.model';
 import { GraphEdge } from '../models/graph-edge.model';
 import { GraphStateService } from '../services/graph-state.service';
+import { ConnectionRoutingService, Point } from '../services/connection-routing.service';
 
 export interface ConnectionModeState {
   selectedConnections: Set<string>;
@@ -29,7 +30,7 @@ export class ConnectionMode implements GraphMode {
   // Reference to component for dialog
   private componentRef: GraphEditorComponent | null = null;
   
-  constructor(private graphState: GraphStateService) {}
+  constructor(private graphState: GraphStateService, private routing: ConnectionRoutingService) {}
   
   setComponentRef(component: GraphEditorComponent): void {
     this.componentRef = component;
@@ -94,16 +95,40 @@ export class ConnectionMode implements GraphMode {
           (this.state.connectionStartPin.nodeId !== node.id || 
            this.state.connectionStartPin.pinName !== pin.name)) {
         
+        // Get pin positions for routing
+        const startPos = this.graphState.getPinPosition(
+          this.state.connectionStartPin.nodeId,
+          this.state.connectionStartPin.pinName
+        );
+        const endPos = this.graphState.getPinPosition(node.id, pin.name);
+        
+        let routedPath: Point[] | undefined = undefined;
+        let isRouted = false;
+        
+        if (startPos && endPos) {
+          // Calculate routed path avoiding obstacles
+          const obstacles = this.graphState.getNodes();
+          const route = this.routing.calculateRoute(startPos, endPos, obstacles, 10);
+          
+          // Only use routing if it results in more than 2 points (i.e., not a straight line)
+          if (route.points.length > 2) {
+            routedPath = route.points;
+            isRouted = true;
+          }
+        }
+        
         const newEdge: GraphEdge = {
           from: `${this.state.connectionStartPin.nodeId}.${this.state.connectionStartPin.pinName}`,
           to: `${node.id}.${pin.name}`,
-          direction: 'forward',
+          direction: 'none', // Default to no direction as required
           type: 'signal',
+          routedPath,
+          isRouted,
           createdAt: new Date()
         };
         
         this.graphState.addEdge(newEdge);
-        console.log(`Created connection: ${newEdge.from} -> ${newEdge.to}`);
+        console.log(`Created ${isRouted ? 'routed' : 'direct'} connection: ${newEdge.from} -> ${newEdge.to}`);
       }
       
       // Reset connection creation state

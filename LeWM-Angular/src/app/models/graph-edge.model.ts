@@ -1,7 +1,12 @@
 import { ConnectionValue } from './connection-value.model';
 
-export type ConnectionDirection = 'forward' | 'backward' | 'bidirectional';
+export type ConnectionDirection = 'forward' | 'backward' | 'bidirectional' | 'none';
 export type ConnectionType = 'signal' | 'power' | 'data' | 'control' | 'custom';
+
+export interface Point {
+  x: number;
+  y: number;
+}
 
 export interface GraphEdge {
   // Basic connection info
@@ -21,6 +26,10 @@ export interface GraphEdge {
   color?: string; // Custom color for the connection
   strokeWidth?: number; // Line thickness
   strokeStyle?: 'solid' | 'dashed' | 'dotted'; // Line style
+  
+  // Routing support
+  routedPath?: Point[]; // Array of points for routed connections
+  isRouted?: boolean; // Whether this connection uses routing
   
   // State
   isSelected?: boolean; // For connection mode selection

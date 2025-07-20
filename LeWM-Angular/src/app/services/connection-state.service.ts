@@ -1,11 +1,14 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { GraphEdge } from '../models/graph-edge.model';
+import { ConnectionRoutingService } from './connection-routing.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ConnectionStateService {
+  private readonly routing = inject(ConnectionRoutingService);
+  
   private readonly defaultEdges: GraphEdge[] = [
     { id: 'conn_1', from: 'power.+9V', to: 'reg.IN' },
     { id: 'conn_2', from: 'power.GND', to: 'reg.GND' },

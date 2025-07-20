@@ -10,6 +10,7 @@ import { PinStateService } from '../../services/pin-state.service';
 import { PinSyncService } from '../../services/pin-sync.service';
 import { FileService } from '../../services/file.service';
 import { FeatureGraphService } from '../../services/feature-graph.service';
+import { ConnectionRoutingService } from '../../services/connection-routing.service';
 import { GraphMode } from '../../interfaces/graph-mode.interface';
 import { Pin } from '../../interfaces/pin.interface';
 import { NormalMode } from '../../modes/normal.mode';
@@ -160,6 +161,7 @@ export class GraphEditorComponent implements OnInit, OnDestroy, AfterViewInit {
   private featureGraphService = inject(FeatureGraphService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private routing = inject(ConnectionRoutingService);
 
   // Feature flag observables
   graphNodeEnabled$: Observable<boolean>;
@@ -273,6 +275,13 @@ export class GraphEditorComponent implements OnInit, OnDestroy, AfterViewInit {
         case 'p':
           if (this.currentMode?.name !== 'pin-edit') {
             this.switchToPinEditMode();
+            event.preventDefault();
+            return;
+          }
+          break;
+        case 'c':
+          if (this.currentMode?.name !== 'connection') {
+            this.switchToConnectionMode();
             event.preventDefault();
             return;
           }
@@ -598,7 +607,7 @@ export class GraphEditorComponent implements OnInit, OnDestroy, AfterViewInit {
     // Create and register modes
     const normalMode = new NormalMode(this.graphState);
     const pinEditMode = new PinEditMode(this.graphState, this.pinState);
-    const connectionMode = new ConnectionMode(this.graphState);
+    const connectionMode = new ConnectionMode(this.graphState, this.routing);
     const fileMode = new FileMode(this.graphState, this.pinState, this.fileService);
     
     // Set component references for modes that need dialogs
@@ -661,6 +670,12 @@ export class GraphEditorComponent implements OnInit, OnDestroy, AfterViewInit {
     if (!this.isNavigatingFromRoute) {
       this.router.navigate(['/pin']);
     }
+  }
+
+  switchToConnectionMode(): void {
+    console.log('Switching to Connection mode');
+    this.modeManager.activateMode('connection');
+    // No specific route navigation for connection mode - stays on current route
   }
 
   switchToFileMode(): void {
@@ -953,6 +968,39 @@ export class GraphEditorComponent implements OnInit, OnDestroy, AfterViewInit {
     const [nodeId, pinName] = edge.to.split('.');
     const position = this.graphState.getPinPosition(nodeId, pinName);
     return position ? position.y : 0;
+  }
+  
+  // Helper methods for routed connections
+  getRoutedPathPoints(edge: GraphEdge): string {
+    if (!edge.routedPath || edge.routedPath.length === 0) {
+      // Fallback to direct line
+      return `${this.getConnectionStartX(edge)},${this.getConnectionStartY(edge)} ${this.getConnectionEndX(edge)},${this.getConnectionEndY(edge)}`;
+    }
+    
+    // Convert path points to SVG polyline format
+    return edge.routedPath.map(point => `${point.x},${point.y}`).join(' ');
+  }
+  
+  getConnectionMidpointX(edge: GraphEdge): number {
+    if (edge.isRouted && edge.routedPath && edge.routedPath.length > 0) {
+      // For routed paths, use the middle point or middle of middle segment
+      const midIndex = Math.floor(edge.routedPath.length / 2);
+      return edge.routedPath[midIndex].x;
+    } else {
+      // For direct connections, use the simple midpoint
+      return (this.getConnectionStartX(edge) + this.getConnectionEndX(edge)) / 2;
+    }
+  }
+  
+  getConnectionMidpointY(edge: GraphEdge): number {
+    if (edge.isRouted && edge.routedPath && edge.routedPath.length > 0) {
+      // For routed paths, use the middle point or middle of middle segment
+      const midIndex = Math.floor(edge.routedPath.length / 2);
+      return edge.routedPath[midIndex].y;
+    } else {
+      // For direct connections, use the simple midpoint
+      return (this.getConnectionStartY(edge) + this.getConnectionEndY(edge)) / 2;
+    }
   }
   
   // Helper methods for enhanced connection rendering
