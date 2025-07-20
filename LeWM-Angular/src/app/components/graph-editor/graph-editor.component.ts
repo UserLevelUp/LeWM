@@ -648,6 +648,9 @@ export class GraphEditorComponent implements OnInit, OnDestroy, AfterViewInit {
         case 'pin-edit':
           this.router.navigate(['/pin']);
           break;
+        case 'connection':
+          this.router.navigate(['/connection']);
+          break;
         // Other modes don't have specific routes yet, stay on current path
       }
     }
