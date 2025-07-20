@@ -279,7 +279,13 @@ export class GraphEditorComponent implements OnInit, OnDestroy, AfterViewInit {
             return;
           }
           break;
-
+        case 'c':
+          if (this.currentMode?.name !== 'connection') {
+            this.switchToConnectionMode();
+            event.preventDefault();
+            return;
+          }
+          break;
         case 'f':
           if (this.currentMode?.name !== 'file') {
             this.switchToFileMode();
@@ -666,6 +672,13 @@ export class GraphEditorComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
+  switchToConnectionMode(): void {
+    console.log('Switching to Connection mode');
+    this.modeManager.activateMode('connection');
+    if (!this.isNavigatingFromRoute) {
+      this.router.navigate(['/connection']);
+    }
+  }
 
   switchToFileMode(): void {
     console.log('Switching to File mode');
