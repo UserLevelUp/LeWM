@@ -1,5 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { ActivatedRoute, Router } from '@angular/router';
+import { of } from 'rxjs';
 import { GraphEditorComponent } from './graph-editor.component';
 import { GraphStateService } from '../../services/graph-state.service';
 import { ModeManagerService } from '../../services/mode-manager.service';
@@ -55,7 +57,22 @@ describe('GraphEditorComponent - Pin Mode Enter Key Fix', () => {
         { provide: PinStateService, useValue: pinStateSpy },
         { provide: PinSyncService, useValue: jasmine.createSpyObj('PinSyncService', ['init']) },
         { provide: FileService, useValue: jasmine.createSpyObj('FileService', ['save']) },
-        { provide: ChangeDetectorRef, useValue: jasmine.createSpyObj('ChangeDetectorRef', ['detectChanges']) }
+        { provide: ChangeDetectorRef, useValue: jasmine.createSpyObj('ChangeDetectorRef', ['detectChanges']) },
+        {
+          provide: ActivatedRoute,
+          useValue: {
+            data: of({ mode: 'normal' }),
+            params: of({}),
+            queryParams: of({}),
+            fragment: of('')
+          }
+        },
+        {
+          provide: Router,
+          useValue: {
+            navigate: jasmine.createSpy('navigate')
+          }
+        }
       ]
     }).compileComponents();
 
