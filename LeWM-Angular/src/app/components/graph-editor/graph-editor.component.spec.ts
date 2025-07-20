@@ -89,6 +89,7 @@ describe('GraphEditorComponent', () => {
       // Set up spies for mode switching methods
       spyOn(component, 'switchToNormalMode');
       spyOn(component, 'switchToPinEditMode');
+      spyOn(component, 'switchToConnectionMode');
       spyOn(component, 'switchToFileMode');
     });
 
@@ -100,16 +101,19 @@ describe('GraphEditorComponent', () => {
       const eventF = new KeyboardEvent('keydown', { key: 'f' });
       const eventP = new KeyboardEvent('keydown', { key: 'p' });
       const eventN = new KeyboardEvent('keydown', { key: 'n' });
+      const eventC = new KeyboardEvent('keydown', { key: 'c' });
 
       // Trigger the keyboard events
       component.handleKeyDown(eventF);
       component.handleKeyDown(eventP);
       component.handleKeyDown(eventN);
+      component.handleKeyDown(eventC);
 
       // Verify that mode switching methods were not called
       expect(component.switchToFileMode).not.toHaveBeenCalled();
       expect(component.switchToPinEditMode).not.toHaveBeenCalled();
       expect(component.switchToNormalMode).not.toHaveBeenCalled();
+      expect(component.switchToConnectionMode).not.toHaveBeenCalled();
     });
 
     it('should prevent mode switching when pin dialog is open', () => {
@@ -119,14 +123,17 @@ describe('GraphEditorComponent', () => {
       // Create keyboard events for mode switching keys
       const eventF = new KeyboardEvent('keydown', { key: 'f' });
       const eventP = new KeyboardEvent('keydown', { key: 'p' });
+      const eventC = new KeyboardEvent('keydown', { key: 'c' });
 
       // Trigger the keyboard events
       component.handleKeyDown(eventF);
       component.handleKeyDown(eventP);
+      component.handleKeyDown(eventC);
 
       // Verify that mode switching methods were not called
       expect(component.switchToFileMode).not.toHaveBeenCalled();
       expect(component.switchToPinEditMode).not.toHaveBeenCalled();
+      expect(component.switchToConnectionMode).not.toHaveBeenCalled();
     });
 
     it('should prevent mode switching when connection dialog is open', () => {
@@ -143,6 +150,7 @@ describe('GraphEditorComponent', () => {
 
       // Verify that mode switching methods were not called
       expect(component.switchToFileMode).not.toHaveBeenCalled();
+      expect(component.switchToConnectionMode).not.toHaveBeenCalled();
     });
 
     it('should prevent mode switching when pin layout editor is open', () => {
@@ -153,16 +161,19 @@ describe('GraphEditorComponent', () => {
       const eventF = new KeyboardEvent('keydown', { key: 'f' });
       const eventN = new KeyboardEvent('keydown', { key: 'n' });
       const eventP = new KeyboardEvent('keydown', { key: 'p' });
+      const eventC = new KeyboardEvent('keydown', { key: 'c' });
 
       // Trigger the keyboard events
       component.handleKeyDown(eventF);
       component.handleKeyDown(eventN);
       component.handleKeyDown(eventP);
+      component.handleKeyDown(eventC);
 
       // Verify that mode switching methods were not called
       expect(component.switchToFileMode).not.toHaveBeenCalled();
       expect(component.switchToNormalMode).not.toHaveBeenCalled();
       expect(component.switchToPinEditMode).not.toHaveBeenCalled();
+      expect(component.switchToConnectionMode).not.toHaveBeenCalled();
     });
 
     it('should allow mode switching when no dialogs are open', () => {
@@ -179,14 +190,17 @@ describe('GraphEditorComponent', () => {
       // Create keyboard events for mode switching keys
       const eventF = new KeyboardEvent('keydown', { key: 'f' });
       const eventP = new KeyboardEvent('keydown', { key: 'p' });
+      const eventC = new KeyboardEvent('keydown', { key: 'c' });
 
       // Trigger the keyboard events
       component.handleKeyDown(eventF);
       component.handleKeyDown(eventP);
+      component.handleKeyDown(eventC);
 
       // Verify that mode switching methods were called
       expect(component.switchToFileMode).toHaveBeenCalled();
       expect(component.switchToPinEditMode).toHaveBeenCalled();
+      expect(component.switchToConnectionMode).toHaveBeenCalled();
     });
 
     it('should prevent Enter key actions when dialogs are open', () => {

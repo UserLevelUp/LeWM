@@ -33,6 +33,9 @@
         <button (click)="switchToPinEditMode()" (keydown.enter)="switchToPinEditMode()" [class.active]="currentModeName === 'pin-edit'">
           Pin Edit (P)
         </button>
+        <button (click)="switchToConnectionMode()" (keydown.enter)="switchToConnectionMode()" [class.active]="currentModeName === 'connection'">
+          Connection (C)
+        </button>
         <button (click)="switchToFileMode()" (keydown.enter)="switchToFileMode()" [class.active]="currentModeName === 'file'">
           File (F)
         </button>

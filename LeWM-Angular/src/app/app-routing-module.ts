@@ -6,7 +6,8 @@ const routes: Routes = [
   { path: '', redirectTo: '/node', pathMatch: 'full' },
   { path: 'node', component: GraphEditorComponent, data: { mode: 'normal' } },
   { path: 'nodes', component: GraphEditorComponent, data: { mode: 'normal' } }, // Keep for backward compatibility
-  { path: 'pin', component: GraphEditorComponent, data: { mode: 'pin-edit' } }
+  { path: 'pin', component: GraphEditorComponent, data: { mode: 'pin-edit' } },
+  { path: 'connection', component: GraphEditorComponent, data: { mode: 'connection' } }
 ];
 
 @NgModule({
