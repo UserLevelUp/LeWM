@@ -1,6 +1,7 @@
 import { Component, ElementRef, HostListener, ViewChild, OnInit, OnDestroy, AfterViewInit, ChangeDetectorRef, inject } from '@angular/core';
 import { Observable, Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { ActivatedRoute, Router } from '@angular/router';
 import { GraphNode } from '../../models/graph-node.model';
 import { GraphEdge } from '../../models/graph-edge.model';
 import { GraphStateService } from '../../services/graph-state.service';
@@ -116,6 +117,7 @@ export class GraphEditorComponent implements OnInit, OnDestroy, AfterViewInit {
   public currentMode!: GraphMode;
   availableModes: GraphMode[] = [];
   private modeSubscription?: Subscription;
+  private isNavigatingFromRoute = false;
   
   // Pin dialog state
   showPinDialog = false;
@@ -156,6 +158,8 @@ export class GraphEditorComponent implements OnInit, OnDestroy, AfterViewInit {
   private fileService = inject(FileService);
   private cdr = inject(ChangeDetectorRef);
   private featureGraphService = inject(FeatureGraphService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
 
   // Feature flag observables
   graphNodeEnabled$: Observable<boolean>;
@@ -204,6 +208,17 @@ export class GraphEditorComponent implements OnInit, OnDestroy, AfterViewInit {
     
     // Initialize mode system
     this.initializeModes();
+
+    // Subscribe to route data changes to activate appropriate mode
+    this.route.data.subscribe(data => {
+      const routeMode = data['mode'];
+      if (routeMode) {
+        console.log(`Route mode detected: ${routeMode}`);
+        this.isNavigatingFromRoute = true;
+        this.modeManager.activateMode(routeMode);
+        this.isNavigatingFromRoute = false;
+      }
+    });
 
     // Subscribe to mode changes
     this.modeSubscription = this.modeManager.activeMode$.subscribe(mode => {
@@ -615,6 +630,19 @@ export class GraphEditorComponent implements OnInit, OnDestroy, AfterViewInit {
       this.selectedNodes.clear();
     }
     
+    // Navigate to appropriate URL based on mode (only if not already navigating from route)
+    if (!this.isNavigatingFromRoute) {
+      switch (modeName) {
+        case 'normal':
+          this.router.navigate(['/node']);
+          break;
+        case 'pin-edit':
+          this.router.navigate(['/pin']);
+          break;
+        // Other modes don't have specific routes yet, stay on current path
+      }
+    }
+    
     // Validate connection integrity when switching modes to clean up any orphaned connections
     this.validateConnectionIntegrity();
   }
@@ -622,11 +650,17 @@ export class GraphEditorComponent implements OnInit, OnDestroy, AfterViewInit {
   switchToNormalMode(): void {
     console.log('Switching to Normal mode');
     this.modeManager.activateMode('normal');
+    if (!this.isNavigatingFromRoute) {
+      this.router.navigate(['/node']);
+    }
   }
 
   switchToPinEditMode(): void {
     console.log('Switching to Pin Edit mode');
     this.modeManager.activateMode('pin-edit');
+    if (!this.isNavigatingFromRoute) {
+      this.router.navigate(['/pin']);
+    }
   }
 
   switchToFileMode(): void {

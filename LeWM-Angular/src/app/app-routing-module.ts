@@ -3,8 +3,10 @@ import { RouterModule, Routes } from '@angular/router';
 import { GraphEditorComponent } from './components/graph-editor/graph-editor.component';
 
 const routes: Routes = [
-  { path: '', redirectTo: '/nodes', pathMatch: 'full' },
-  { path: 'nodes', component: GraphEditorComponent }
+  { path: '', redirectTo: '/node', pathMatch: 'full' },
+  { path: 'node', component: GraphEditorComponent, data: { mode: 'normal' } },
+  { path: 'nodes', component: GraphEditorComponent, data: { mode: 'normal' } }, // Keep for backward compatibility
+  { path: 'pin', component: GraphEditorComponent, data: { mode: 'pin-edit' } }
 ];
 
 @NgModule({

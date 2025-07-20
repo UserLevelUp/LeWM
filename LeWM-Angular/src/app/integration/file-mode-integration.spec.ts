@@ -1,5 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { ActivatedRoute, Router } from '@angular/router';
+import { of } from 'rxjs';
 import { GraphEditorComponent } from '../components/graph-editor/graph-editor.component';
 import { GraphStateService } from '../services/graph-state.service';
 import { PinStateService } from '../services/pin-state.service';
@@ -25,7 +27,22 @@ describe('FileMode Integration Tests', () => {
         GraphStateService,
         PinStateService,
         ConnectionStateService,
-        { provide: FileService, useValue: fileServiceSpy }
+        { provide: FileService, useValue: fileServiceSpy },
+        {
+          provide: ActivatedRoute,
+          useValue: {
+            data: of({ mode: 'normal' }),
+            params: of({}),
+            queryParams: of({}),
+            fragment: of('')
+          }
+        },
+        {
+          provide: Router,
+          useValue: {
+            navigate: jasmine.createSpy('navigate')
+          }
+        }
       ]
     }).compileComponents();
 

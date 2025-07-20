@@ -1,6 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { ActivatedRoute, Router } from '@angular/router';
+import { of } from 'rxjs';
 import { GraphEditorComponent } from './graph-editor.component';
 import { GraphStateService } from '../../services/graph-state.service';
 import { ModeManagerService } from '../../services/mode-manager.service';
@@ -20,7 +22,22 @@ describe('Pin Positioning', () => {
         GraphStateService,
         ModeManagerService,
         PinStateService,
-        FileService
+        FileService,
+        {
+          provide: ActivatedRoute,
+          useValue: {
+            data: of({ mode: 'normal' }),
+            params: of({}),
+            queryParams: of({}),
+            fragment: of('')
+          }
+        },
+        {
+          provide: Router,
+          useValue: {
+            navigate: jasmine.createSpy('navigate')
+          }
+        }
       ],
       schemas: [CUSTOM_ELEMENTS_SCHEMA]
     }).compileComponents();
