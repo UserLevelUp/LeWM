@@ -35,7 +35,7 @@ export class ConnectionMode implements GraphMode {
     // Inject the routing service if available
     try {
       this.routing = inject(ConnectionRoutingService);
-    } catch (e) {
+    } catch {
       // Routing service not available, connections will be direct lines
       console.warn('ConnectionRoutingService not available, using direct connections');
     }

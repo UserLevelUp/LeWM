@@ -24,7 +24,7 @@ export class ConnectionRoutingService {
    * @param margin Minimum margin around obstacles
    * @returns RoutedPath containing the path points and total distance
    */
-  calculateRoute(start: Point, end: Point, obstacles: GraphNode[], margin: number = 10): RoutedPath {
+  calculateRoute(start: Point, end: Point, obstacles: GraphNode[], margin = 10): RoutedPath {
     // For minimal changes, implement a simple obstacle avoidance algorithm
     // More sophisticated routing (A*) can be added later if needed
     

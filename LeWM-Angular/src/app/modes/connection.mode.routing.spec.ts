@@ -3,7 +3,6 @@ import { ConnectionMode } from './connection.mode';
 import { GraphStateService } from '../services/graph-state.service';
 import { ConnectionRoutingService } from '../services/connection-routing.service';
 import { GraphNode } from '../models/graph-node.model';
-import { GraphEdge } from '../models/graph-edge.model';
 
 describe('ConnectionMode - Routing Integration', () => {
   let connectionMode: ConnectionMode;
