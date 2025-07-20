@@ -279,13 +279,7 @@ export class GraphEditorComponent implements OnInit, OnDestroy, AfterViewInit {
             return;
           }
           break;
-        case 'c':
-          if (this.currentMode?.name !== 'connection') {
-            this.switchToConnectionMode();
-            event.preventDefault();
-            return;
-          }
-          break;
+
         case 'f':
           if (this.currentMode?.name !== 'file') {
             this.switchToFileMode();
@@ -607,7 +601,7 @@ export class GraphEditorComponent implements OnInit, OnDestroy, AfterViewInit {
     // Create and register modes
     const normalMode = new NormalMode(this.graphState);
     const pinEditMode = new PinEditMode(this.graphState, this.pinState);
-    const connectionMode = new ConnectionMode(this.graphState, this.routing);
+    const connectionMode = new ConnectionMode(this.graphState);
     const fileMode = new FileMode(this.graphState, this.pinState, this.fileService);
     
     // Set component references for modes that need dialogs
@@ -672,11 +666,6 @@ export class GraphEditorComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-  switchToConnectionMode(): void {
-    console.log('Switching to Connection mode');
-    this.modeManager.activateMode('connection');
-    // No specific route navigation for connection mode - stays on current route
-  }
 
   switchToFileMode(): void {
     console.log('Switching to File mode');

@@ -30,7 +30,9 @@ describe('ConnectionMode - Routing Integration', () => {
     // Setup default mock returns
     graphStateService.getEdges.and.returnValue([]);
     
-    connectionMode = new ConnectionMode(graphStateService, routingService);
+    connectionMode = new ConnectionMode(graphStateService);
+    // Manually inject the routing service for testing
+    (connectionMode as any).routing = routingService;
     connectionMode.activate();
   });
 

@@ -4,6 +4,7 @@ import { GraphNode } from '../models/graph-node.model';
 import { GraphEdge } from '../models/graph-edge.model';
 import { GraphStateService } from '../services/graph-state.service';
 import { ConnectionRoutingService, Point } from '../services/connection-routing.service';
+import { inject } from '@angular/core';
 
 export interface ConnectionModeState {
   selectedConnections: Set<string>;
@@ -30,7 +31,17 @@ export class ConnectionMode implements GraphMode {
   // Reference to component for dialog
   private componentRef: GraphEditorComponent | null = null;
   
-  constructor(private graphState: GraphStateService, private routing: ConnectionRoutingService) {}
+  constructor(private graphState: GraphStateService) {
+    // Inject the routing service if available
+    try {
+      this.routing = inject(ConnectionRoutingService);
+    } catch (e) {
+      // Routing service not available, connections will be direct lines
+      console.warn('ConnectionRoutingService not available, using direct connections');
+    }
+  }
+  
+  private routing?: ConnectionRoutingService;
   
   setComponentRef(component: GraphEditorComponent): void {
     this.componentRef = component;
@@ -106,14 +117,16 @@ export class ConnectionMode implements GraphMode {
         let isRouted = false;
         
         if (startPos && endPos) {
-          // Calculate routed path avoiding obstacles
-          const obstacles = this.graphState.getNodes();
-          const route = this.routing.calculateRoute(startPos, endPos, obstacles, 10);
-          
-          // Only use routing if it results in more than 2 points (i.e., not a straight line)
-          if (route.points.length > 2) {
-            routedPath = route.points;
-            isRouted = true;
+          // Calculate routed path avoiding obstacles if routing service is available
+          if (this.routing) {
+            const obstacles = this.graphState.getNodes();
+            const route = this.routing.calculateRoute(startPos, endPos, obstacles, 10);
+            
+            // Only use routing if it results in more than 2 points (i.e., not a straight line)
+            if (route.points.length > 2) {
+              routedPath = route.points;
+              isRouted = true;
+            }
           }
         }
         
