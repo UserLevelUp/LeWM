@@ -63,11 +63,6 @@ describe('ConnectionRoutingService', () => {
       
       const route = service.calculateRoute(start, end, obstacles, 5);
       
-      // Debug logging for test
-      console.log('Test route result:', route);
-      console.log('Route points:', route.points);
-      console.log('Points count:', route.points.length);
-      
       // Should have more than 2 points for a routed path
       expect(route.points.length).toBeGreaterThan(2);
       // Should start and end at the correct points

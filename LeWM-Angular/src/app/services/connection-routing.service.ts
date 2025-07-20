@@ -226,8 +226,10 @@ export class ConnectionRoutingService {
     let bestDistance = Infinity;
     
     for (const corner of corners) {
-      const path1Clear = this.isPathClear(start, corner, allObstacles, margin);
-      const path2Clear = this.isPathClear(corner, end, allObstacles, margin);
+      // Check if path segments are clear (only check against other obstacles, not the main one we're routing around)
+      const otherObstacles = allObstacles.filter(obs => obs.id !== obstacle.id);
+      const path1Clear = this.isPathClear(start, corner, otherObstacles, margin);
+      const path2Clear = this.isPathClear(corner, end, otherObstacles, margin);
       
       if (path1Clear && path2Clear) {
         const candidatePath = [start, corner, end];
