@@ -84,8 +84,11 @@
       </div>
     </div>
     
-    <!-- Feature Flags -->
-    <app-feature-flag-toggle></app-feature-flag-toggle>
+    <!-- Feature Flags (only visible in Feature Flag mode) -->
+    <div class="feature-flag-panel" *ngIf="currentMode?.name === 'feature-flag'">
+      <h3>Feature Configuration</h3>
+      <app-feature-flag-toggle></app-feature-flag-toggle>
+    </div>
   </div>
   
   <!-- Resize handle -->

@@ -363,3 +363,17 @@
     opacity: 1;
   }
 }
+
+// Feature Flag Panel Styling
+.feature-flag-panel {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 2px solid #e5e7eb;
+  
+  h3 {
+    margin: 0 0 1rem 0;
+    color: #4338ca;
+    font-size: 1rem;
+    font-weight: 600;
+  }
+}
