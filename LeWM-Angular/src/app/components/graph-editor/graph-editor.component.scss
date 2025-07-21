@@ -145,9 +145,22 @@
   background-color: white;
 }
 
+.standard-canvas {
+  background-color: white;
+}
+
+.feature-flag-canvas {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+}
+
 .graph-canvas {
   display: block;
   cursor: crosshair;
+}
+
+.feature-flag-graph-canvas {
+  display: block;
+  cursor: pointer;
 }
 
 .graph-node-group {
@@ -268,5 +281,99 @@
         transform: scale(1.2);
       }
     }
+  }
+}
+
+// Feature Flag mode node styling
+.graph-node-group {
+  &[data-type="feature-enabled"] rect {
+    fill: #4CAF50;
+    stroke: #2E7D32;
+    stroke-width: 2;
+  }
+  
+  &[data-type="feature-disabled"] rect {
+    fill: #F44336;
+    stroke: #C62828;
+    stroke-width: 2;
+  }
+  
+  &[data-type="feature-enabled"] text {
+    fill: white;
+    font-weight: bold;
+  }
+  
+  &[data-type="feature-disabled"] text {
+    fill: white;
+    font-weight: bold;
+  }
+}
+
+// Feature Flag mode specific styles
+:host.feature-flag-mode {
+  .graph-node-group {
+    cursor: pointer;
+    transition: all 0.2s ease;
+    
+    &:hover {
+      transform: scale(1.05);
+      filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.2));
+    }
+    
+    &.selected {
+      filter: drop-shadow(0 0 10px rgba(33, 150, 243, 0.5));
+    }
+  }
+}
+
+// Feature flag specific node and pin styling
+.feature-node {
+  .feature-node-body {
+    transition: all 0.3s ease;
+  }
+  
+  .feature-pin-circle {
+    transition: all 0.2s ease;
+  }
+  
+  .feature-pin-label {
+    pointer-events: none;
+    user-select: none;
+  }
+  
+  .feature-status-indicator {
+    transition: all 0.2s ease;
+  }
+  
+  &:hover {
+    .feature-node-body {
+      filter: brightness(1.1);
+    }
+    
+    .feature-status-indicator {
+      transform: scale(1.2);
+    }
+  }
+}
+
+.feature-connection-line {
+  opacity: 0.8;
+  
+  &:hover {
+    opacity: 1;
+  }
+}
+
+// Feature Flag Panel Styling
+.feature-flag-panel {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 2px solid #e5e7eb;
+  
+  h3 {
+    margin: 0 0 1rem 0;
+    color: #4338ca;
+    font-size: 1rem;
+    font-weight: 600;
   }
 }
