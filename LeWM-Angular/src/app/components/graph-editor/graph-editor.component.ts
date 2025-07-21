@@ -17,6 +17,7 @@ import { NormalMode } from '../../modes/normal.mode';
 import { PinEditMode } from '../../modes/pin-edit.mode';
 import { ConnectionMode } from '../../modes/connection.mode';
 import { FileMode } from '../../modes/file.mode';
+import { FeatureFlagMode } from '../../modes/feature-flag.mode';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ConnectionPropertiesDialogComponent } from '../connection-properties-dialog/connection-properties-dialog.component';
@@ -260,6 +261,15 @@ export class GraphEditorComponent implements OnInit, OnDestroy, AfterViewInit {
     if (this.showNodeDialog || this.showNodeBatchDialog || this.showPinDialog || this.showConnectionDialog || this.showConnectionBulkDialog || this.showPinLayoutEditor) {
       console.log('Dialog is open, skipping mode switching for key:', event.key);
       return;
+    }
+
+    // Handle F1 key for Feature Flag mode (always available)
+    if (event.key === 'F1') {
+      if (this.currentMode?.name !== 'feature-flag') {
+        this.switchToFeatureFlagMode();
+        event.preventDefault();
+        return;
+      }
     }
 
     // Mode switching keys
@@ -609,6 +619,7 @@ export class GraphEditorComponent implements OnInit, OnDestroy, AfterViewInit {
     const pinEditMode = new PinEditMode(this.graphState, this.pinState);
     const connectionMode = new ConnectionMode(this.graphState);
     const fileMode = new FileMode(this.graphState, this.pinState, this.fileService);
+    const featureFlagMode = new FeatureFlagMode(this.featureGraphService, this.graphState);
     
     // Set component references for modes that need dialogs
     pinEditMode.setComponentRef(this);
@@ -619,6 +630,7 @@ export class GraphEditorComponent implements OnInit, OnDestroy, AfterViewInit {
     this.modeManager.registerMode(pinEditMode);
     this.modeManager.registerMode(connectionMode);
     this.modeManager.registerMode(fileMode);
+    this.modeManager.registerMode(featureFlagMode);
     
     this.availableModes = this.modeManager.getAvailableModes();
     
@@ -653,6 +665,9 @@ export class GraphEditorComponent implements OnInit, OnDestroy, AfterViewInit {
           break;
         case 'file':
           this.router.navigate(['/file']);
+          break;
+        case 'feature-flag':
+          this.router.navigate(['/features']);
           break;
       }
     }
@@ -690,6 +705,14 @@ export class GraphEditorComponent implements OnInit, OnDestroy, AfterViewInit {
     this.modeManager.activateMode('file');
     if (!this.isNavigatingFromRoute) {
       this.router.navigate(['/file']);
+    }
+  }
+
+  switchToFeatureFlagMode(): void {
+    console.log('Switching to Feature Flag mode');
+    this.modeManager.activateMode('feature-flag');
+    if (!this.isNavigatingFromRoute) {
+      this.router.navigate(['/features']);
     }
   }
   

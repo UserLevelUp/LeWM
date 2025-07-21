@@ -39,6 +39,9 @@
         <button (click)="switchToFileMode()" (keydown.enter)="switchToFileMode()" [class.active]="currentModeName === 'file'">
           File (F)
         </button>
+        <button (click)="switchToFeatureFlagMode()" (keydown.enter)="switchToFeatureFlagMode()" [class.active]="currentModeName === 'feature-flag'" title="Feature Flags (F1)">
+          Features (F1)
+        </button>
       </div>
 
       <!-- File Mode Toolbar -->
@@ -187,7 +190,8 @@
       <g *ngFor="let node of nodes$ | async" 
          [attr.id]="node.id"
          (mousedown)="onNodeMouseDown($event, node.id)"
-         [attr.class]="'graph-node-group ' + (selectedNodes.has(node.id) ? 'selected' : '')">
+         [attr.class]="'graph-node-group ' + (selectedNodes.has(node.id) ? 'selected' : '')"
+         [attr.data-type]="node.type">
         <rect [attr.x]="node.x" 
               [attr.y]="node.y" 
               [attr.width]="node.width" 

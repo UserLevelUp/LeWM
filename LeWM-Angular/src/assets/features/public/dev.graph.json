@@ -12,10 +12,52 @@
       "dependencies": ["basic-graph-editing"]
     },
     {
+      "id": "graph.pin",
+      "name": "graph.pin",
+      "enabled": true,
+      "dependencies": ["graph.node"]
+    },
+    {
+      "id": "graph.connection",
+      "name": "graph.connection",
+      "enabled": true,
+      "dependencies": ["graph.pin"]
+    },
+    {
       "id": "advanced-features",
       "name": "advanced-features", 
       "enabled": false,
       "dependencies": ["basic-graph-editing"]
+    },
+    {
+      "id": "pin-edit-mode",
+      "name": "pin-edit-mode",
+      "enabled": true,
+      "dependencies": ["graph.pin"]
+    },
+    {
+      "id": "connection-mode",
+      "name": "connection-mode",
+      "enabled": true,
+      "dependencies": ["graph.connection"]
+    },
+    {
+      "id": "file-mode",
+      "name": "file-mode",
+      "enabled": true,
+      "dependencies": ["basic-graph-editing"]
+    },
+    {
+      "id": "feature-flag-mode",
+      "name": "feature-flag-mode",
+      "enabled": true,
+      "dependencies": ["basic-graph-editing"]
+    },
+    {
+      "id": "circuit-simulation",
+      "name": "circuit-simulation",
+      "enabled": false,
+      "dependencies": ["advanced-features", "graph.connection"]
     }
   ]
 }

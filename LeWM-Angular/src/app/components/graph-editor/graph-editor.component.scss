@@ -270,3 +270,45 @@
     }
   }
 }
+
+// Feature Flag mode node styling
+.graph-node-group {
+  &[data-type="feature-enabled"] rect {
+    fill: #4CAF50;
+    stroke: #2E7D32;
+    stroke-width: 2;
+  }
+  
+  &[data-type="feature-disabled"] rect {
+    fill: #F44336;
+    stroke: #C62828;
+    stroke-width: 2;
+  }
+  
+  &[data-type="feature-enabled"] text {
+    fill: white;
+    font-weight: bold;
+  }
+  
+  &[data-type="feature-disabled"] text {
+    fill: white;
+    font-weight: bold;
+  }
+}
+
+// Feature Flag mode specific styles
+:host.feature-flag-mode {
+  .graph-node-group {
+    cursor: pointer;
+    transition: all 0.2s ease;
+    
+    &:hover {
+      transform: scale(1.05);
+      filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.2));
+    }
+    
+    &.selected {
+      filter: drop-shadow(0 0 10px rgba(33, 150, 243, 0.5));
+    }
+  }
+}
