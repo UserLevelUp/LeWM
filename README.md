@@ -1,6 +1,6 @@
 ![image](https://github.com/user-attachments/assets/4336db93-e31e-451d-89c2-a2dfbf17c170)
 
-# LeWM - Level With Me
+# LeWM - Level With Me  - Stage: Alpha
 ## A Type-Safe Visual Graph Editor
 
 **🌐 Live Demo:** [View on GitHub Pages](https://userlevelup.github.io/LeWM/)
