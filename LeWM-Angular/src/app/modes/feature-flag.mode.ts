@@ -18,6 +18,8 @@ export class FeatureFlagMode implements GraphMode {
   activate(): void {
     console.log('Feature Flag mode activated');
     this.selectedPins.clear();
+    // Clear canvas immediately when entering Feature Flag Mode
+    this.graphState.resetToDefaults();
     this.loadFeatureGraph();
   }
   
@@ -46,10 +48,10 @@ export class FeatureFlagMode implements GraphMode {
   }
   
   handlePinClick(node: GraphNode, pin: { x: number; y: number; name: string }, event: MouseEvent): boolean {
-    // Feature flag mode doesn't use pin clicks for connections
-    // Instead, pins represent dependencies which are read-only
+    // Return false to let component handle pin reference rectangles
+    // This maintains hover states and visual feedback
     console.log(`Feature Flag mode: Pin clicked on ${node.label}.${pin.name} (dependency visualization)`);
-    return true;
+    return false;
   }
   
   handleCanvasClick(event: MouseEvent): boolean {
