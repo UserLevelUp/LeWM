@@ -7,7 +7,8 @@ const routes: Routes = [
   { path: 'node', component: GraphEditorComponent, data: { mode: 'normal' } },
   { path: 'nodes', component: GraphEditorComponent, data: { mode: 'normal' } }, // Keep for backward compatibility
   { path: 'pin', component: GraphEditorComponent, data: { mode: 'pin-edit' } },
-  { path: 'connection', component: GraphEditorComponent, data: { mode: 'connection' } }
+  { path: 'connection', component: GraphEditorComponent, data: { mode: 'connection' } },
+  { path: 'file', component: GraphEditorComponent, data: { mode: 'file' } }
 ];
 
 @NgModule({
