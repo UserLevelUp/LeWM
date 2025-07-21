@@ -651,7 +651,9 @@ export class GraphEditorComponent implements OnInit, OnDestroy, AfterViewInit {
         case 'connection':
           this.router.navigate(['/connection']);
           break;
-        // Other modes don't have specific routes yet, stay on current path
+        case 'file':
+          this.router.navigate(['/file']);
+          break;
       }
     }
     
@@ -686,6 +688,9 @@ export class GraphEditorComponent implements OnInit, OnDestroy, AfterViewInit {
   switchToFileMode(): void {
     console.log('Switching to File mode');
     this.modeManager.activateMode('file');
+    if (!this.isNavigatingFromRoute) {
+      this.router.navigate(['/file']);
+    }
   }
   
   private validateConnectionIntegrity(): void {
