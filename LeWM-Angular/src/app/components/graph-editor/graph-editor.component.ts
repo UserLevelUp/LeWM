@@ -1450,7 +1450,7 @@ export class GraphEditorComponent implements OnInit, OnDestroy, AfterViewInit {
     return node.type === 'feature-enabled' ? '#16A34A' : '#DC2626';
   }
 
-  getFeatureNodeTextColor(node: GraphNode): string {
+  getFeatureNodeTextColor(): string {
     return 'white';
   }
 

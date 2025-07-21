@@ -2,7 +2,7 @@ import { GraphMode } from '../interfaces/graph-mode.interface';
 import { GraphNode } from '../models/graph-node.model';
 import { FeatureGraphService } from '../services/feature-graph.service';
 import { GraphStateService } from '../services/graph-state.service';
-import { FeatureGraph, FeatureGraphNode } from '../interfaces/feature-graph.interface';
+import { FeatureGraph } from '../interfaces/feature-graph.interface';
 
 export class FeatureFlagMode implements GraphMode {
   name = 'feature-flag';
@@ -18,8 +18,8 @@ export class FeatureFlagMode implements GraphMode {
   activate(): void {
     console.log('Feature Flag mode activated');
     this.selectedPins.clear();
-    // Clear canvas immediately when entering Feature Flag Mode
-    this.graphState.resetToDefaults();
+    // Clear canvas immediately when entering Feature Flag Mode - remove circuit nodes
+    this.graphState.clearNodes();
     this.loadFeatureGraph();
   }
   
@@ -47,19 +47,19 @@ export class FeatureFlagMode implements GraphMode {
     return true;
   }
   
-  handlePinClick(node: GraphNode, pin: { x: number; y: number; name: string }, event: MouseEvent): boolean {
+  handlePinClick(node: GraphNode, pin: { x: number; y: number; name: string }): boolean {
     // Return false to let component handle pin reference rectangles
     // This maintains hover states and visual feedback
     console.log(`Feature Flag mode: Pin clicked on ${node.label}.${pin.name} (dependency visualization)`);
     return false;
   }
   
-  handleCanvasClick(event: MouseEvent): boolean {
+  handleCanvasClick(): boolean {
     // Clear selection on canvas click
     return false; // Let component handle selection clearing
   }
   
-  handleMouseMove(event: MouseEvent): boolean {
+  handleMouseMove(): boolean {
     // Feature flag mode doesn't need special mouse move handling
     return false;
   }
@@ -109,13 +109,13 @@ export class FeatureFlagMode implements GraphMode {
   }
   
   private convertFeaturesToNodes(featureGraph: FeatureGraph): void {
-    // Reset to defaults first to clear existing nodes
-    this.graphState.resetToDefaults();
+    // Clear nodes first to ensure clean state
+    this.graphState.clearNodes();
     
     const nodes: GraphNode[] = [];
     const spacing = 200; // Space between nodes
-    let x = 100;
-    let y = 100;
+    const x = 100;
+    const y = 100;
     
     // Convert features to visual nodes
     featureGraph.features.forEach((feature, index) => {

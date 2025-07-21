@@ -1,6 +1,4 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Router } from '@angular/router';
-import { ActivatedRoute } from '@angular/router';
+import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { FeatureFlagMode } from './feature-flag.mode';
 import { FeatureGraphService } from '../services/feature-graph.service';

@@ -323,6 +323,15 @@ export class GraphStateService {
   }
   
   /**
+   * Clear all nodes and connections without loading defaults
+   */
+  clearNodes(): void {
+    this._nodes.next([]);
+    this.connections.setEdges([]);
+    console.log('🧹 Cleared all nodes and connections');
+  }
+
+  /**
    * Clear saved data and reset to defaults
    */
   resetToDefaults(): void {
