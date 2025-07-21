@@ -145,9 +145,22 @@
   background-color: white;
 }
 
+.standard-canvas {
+  background-color: white;
+}
+
+.feature-flag-canvas {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+}
+
 .graph-canvas {
   display: block;
   cursor: crosshair;
+}
+
+.feature-flag-graph-canvas {
+  display: block;
+  cursor: pointer;
 }
 
 .graph-node-group {
@@ -310,5 +323,43 @@
     &.selected {
       filter: drop-shadow(0 0 10px rgba(33, 150, 243, 0.5));
     }
+  }
+}
+
+// Feature flag specific node and pin styling
+.feature-node {
+  .feature-node-body {
+    transition: all 0.3s ease;
+  }
+  
+  .feature-pin-circle {
+    transition: all 0.2s ease;
+  }
+  
+  .feature-pin-label {
+    pointer-events: none;
+    user-select: none;
+  }
+  
+  .feature-status-indicator {
+    transition: all 0.2s ease;
+  }
+  
+  &:hover {
+    .feature-node-body {
+      filter: brightness(1.1);
+    }
+    
+    .feature-status-indicator {
+      transform: scale(1.2);
+    }
+  }
+}
+
+.feature-connection-line {
+  opacity: 0.8;
+  
+  &:hover {
+    opacity: 1;
   }
 }

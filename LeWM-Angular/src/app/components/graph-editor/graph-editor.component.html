@@ -91,7 +91,8 @@
   <!-- Resize handle -->
   <app-handle (positionChange)="onResize($event)" (positionChangeStart)="onResizeStart()" (positionChangeEnd)="onResizeEnd()"></app-handle>
   
-  <div class="canvas-container">
+  <!-- Standard Canvas Container (for non-feature-flag modes) -->
+  <div class="canvas-container standard-canvas" *ngIf="currentMode?.name !== 'feature-flag'">
     <svg #svgCanvas 
          class="graph-canvas"
          width="100%" 
@@ -298,6 +299,134 @@
             stroke="#4a90e2"
             stroke-width="2"
             stroke-dasharray="5,5"
+            pointer-events="none" />
+    </svg>
+  </div>
+
+  <!-- Feature Flag Canvas Container (for feature-flag mode only) -->
+  <div class="canvas-container feature-flag-canvas" *ngIf="currentMode?.name === 'feature-flag'">
+    <svg #featureFlagCanvas 
+         class="graph-canvas feature-flag-graph-canvas"
+         width="100%" 
+         height="100%"
+         (mousedown)="onSvgMouseDown($event)"
+         (mousemove)="onMouseMove($event)"
+         (mouseup)="onMouseUp()">
+      
+      <!-- Feature Flag Grid pattern -->
+      <defs>
+        <pattern id="feature-grid" width="25" height="25" patternUnits="userSpaceOnUse">
+          <path d="M 25 0 L 0 0 0 25" fill="none" stroke="#e0e7ff" stroke-width="1"/>
+        </pattern>
+      </defs>
+      <rect id="feature-grid-rect" width="100%" height="100%" fill="url(#feature-grid)" />
+      
+      <!-- Feature Flag Connection Lines (Dependencies) -->
+      <g *ngFor="let edge of edges$ | async" class="feature-connection-line">
+        <!-- Dependency connection line -->
+        <line [attr.x1]="getConnectionStartX(edge)" 
+              [attr.y1]="getConnectionStartY(edge)"
+              [attr.x2]="getConnectionEndX(edge)" 
+              [attr.y2]="getConnectionEndY(edge)"
+              [attr.stroke]="edge.color || '#6366F1'"
+              [attr.stroke-width]="3"
+              [attr.stroke-dasharray]="'5,3'"
+              [attr.opacity]="0.7"
+              pointer-events="none" />
+        
+        <!-- Dependency label -->
+        <text *ngIf="edge.label"
+              [attr.x]="(getConnectionStartX(edge) + getConnectionEndX(edge)) / 2"
+              [attr.y]="(getConnectionStartY(edge) + getConnectionEndY(edge)) / 2 - 8"
+              text-anchor="middle"
+              font-size="10"
+              [attr.fill]="'#4338CA'"
+              font-weight="500"
+              pointer-events="none">
+          depends on
+        </text>
+      </g>
+
+      <!-- Feature Flag Arrow marker definitions -->
+      <defs>
+        <marker id="feature-arrow" markerWidth="12" markerHeight="8" 
+                refX="10" refY="4" orient="auto">
+          <polygon points="0 0, 12 4, 0 8" fill="#6366F1" />
+        </marker>
+      </defs>
+
+      <!-- Feature Flag Nodes -->
+      <g *ngFor="let node of nodes$ | async" 
+         [attr.id]="node.id"
+         (mousedown)="onNodeMouseDown($event, node.id)"
+         [attr.class]="'graph-node-group feature-node ' + (selectedNodes.has(node.id) ? 'selected' : '')"
+         [attr.data-type]="node.type">
+        <rect [attr.x]="node.x" 
+              [attr.y]="node.y" 
+              [attr.width]="node.width" 
+              [attr.height]="node.height"
+              [attr.fill]="getFeatureNodeFill(node)"
+              [attr.stroke]="getFeatureNodeStroke(node)" 
+              stroke-width="3"
+              rx="8"
+              class="feature-node-body" />
+        <text [attr.x]="node.x + node.width/2" 
+              [attr.y]="node.y + node.height/2 + 5" 
+              text-anchor="middle" 
+              font-size="13" 
+              font-weight="600"
+              [attr.fill]="getFeatureNodeTextColor(node)">
+          {{ node.label }}
+        </text>
+        
+        <!-- Feature Flag Dependency Pins -->
+        <g *ngIf="node.pins" class="pins feature-pins">
+          <g *ngFor="let pin of node.pins" class="pin-group">
+            <!-- Dependency pin -->
+            <circle [attr.cx]="node.x + pin.x"
+                    [attr.cy]="node.y + pin.y"
+                    r="5"
+                    [attr.fill]="pin.name.startsWith('dep-') ? '#EF4444' : '#10B981'"
+                    stroke="white"
+                    stroke-width="2"
+                    class="feature-pin-circle" />
+            
+            <!-- Pin label for dependencies -->
+            <text *ngIf="pin.name.startsWith('dep-')"
+                  [attr.x]="node.x + pin.x - 12"
+                  [attr.y]="node.y + pin.y + 3"
+                  class="feature-pin-label"
+                  fill="#7C2D12"
+                  font-size="9"
+                  font-weight="500"
+                  text-anchor="end">
+              requires
+            </text>
+          </g>
+        </g>
+        
+        <!-- Feature status indicator -->
+        <circle [attr.cx]="node.x + node.width - 15"
+                [attr.cy]="node.y + 15"
+                r="8"
+                [attr.fill]="node.type === 'feature-enabled' ? '#10B981' : '#EF4444'"
+                stroke="white"
+                stroke-width="2"
+                class="feature-status-indicator">
+          <title>{{ node.type === 'feature-enabled' ? 'Enabled' : 'Disabled' }}</title>
+        </circle>
+      </g>
+      
+      <!-- Feature Flag Selection box -->
+      <rect *ngIf="selectionBox"
+            [attr.x]="Math.min(selectionBox.startX, selectionBox.endX)"
+            [attr.y]="Math.min(selectionBox.startY, selectionBox.endY)"
+            [attr.width]="Math.abs(selectionBox.endX - selectionBox.startX)"
+            [attr.height]="Math.abs(selectionBox.endY - selectionBox.startY)"
+            fill="rgba(99, 102, 241, 0.15)"
+            stroke="#6366F1"
+            stroke-width="2"
+            stroke-dasharray="8,4"
             pointer-events="none" />
     </svg>
   </div>

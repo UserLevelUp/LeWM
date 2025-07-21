@@ -71,7 +71,8 @@ interface LegacyPin {
   styleUrl: './graph-editor.component.scss'
 })
 export class GraphEditorComponent implements OnInit, OnDestroy, AfterViewInit {
-  @ViewChild('svgCanvas', { static: true }) svgCanvas!: ElementRef<SVGElement>;
+  @ViewChild('svgCanvas', { static: false }) svgCanvas!: ElementRef<SVGElement>;
+  @ViewChild('featureFlagCanvas', { static: false }) featureFlagCanvas!: ElementRef<SVGElement>;
   @ViewChild('pinDialog', { static: false }) pinDialog!: PinNameDialogComponent;
 
   // Expose the nodes and edges observables directly to the template
@@ -232,9 +233,10 @@ export class GraphEditorComponent implements OnInit, OnDestroy, AfterViewInit {
       if (mode?.name !== 'pin-edit') {
         this.clearOverlay();
       }
-      // Update cursor based on mode
-      if (this.svgCanvas?.nativeElement) {
-        this.svgCanvas.nativeElement.style.cursor = this.modeManager.getActiveCursor();
+      // Update cursor based on mode using the active canvas
+      const activeCanvasElement = this.getActiveCanvasElement();
+      if (activeCanvasElement) {
+        activeCanvasElement.style.cursor = this.modeManager.getActiveCursor();
       }
     });
   }
@@ -247,9 +249,10 @@ export class GraphEditorComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   ngAfterViewInit(): void {
-    // Render initial overlay if needed
-    if (this.currentMode && this.svgCanvas?.nativeElement) {
-      this.modeManager.renderActiveOverlay(this.svgCanvas.nativeElement);
+    // Render initial overlay if needed using the active canvas
+    const activeCanvasElement = this.getActiveCanvasElement();
+    if (this.currentMode && activeCanvasElement) {
+      this.modeManager.renderActiveOverlay(activeCanvasElement);
     }
   }
 
@@ -476,7 +479,9 @@ export class GraphEditorComponent implements OnInit, OnDestroy, AfterViewInit {
       return;
     }
 
-    const svgRect = this.svgCanvas.nativeElement.getBoundingClientRect();
+    const svgRect = this.getActiveCanvasBoundingRect();
+    if (!svgRect) return;
+    
     const mouseX = event.clientX - svgRect.left;
     const mouseY = event.clientY - svgRect.top;
 
@@ -515,14 +520,17 @@ export class GraphEditorComponent implements OnInit, OnDestroy, AfterViewInit {
   onMouseMove(event: MouseEvent): void {
     // Let the mode handle mouse move first
     if (this.modeManager.handleMouseMove(event)) {
-      // Mode handled the event, trigger overlay re-render
-      if (this.svgCanvas?.nativeElement) {
-        this.modeManager.renderActiveOverlay(this.svgCanvas.nativeElement);
+      // Mode handled the event, trigger overlay re-render using active canvas
+      const activeCanvasElement = this.getActiveCanvasElement();
+      if (activeCanvasElement) {
+        this.modeManager.renderActiveOverlay(activeCanvasElement);
       }
       return;
     }
     
-    const svgRect = this.svgCanvas.nativeElement.getBoundingClientRect();
+    const svgRect = this.getActiveCanvasBoundingRect();
+    if (!svgRect) return;
+    
     const mouseX = event.clientX - svgRect.left;
     const mouseY = event.clientY - svgRect.top;
 
@@ -586,7 +594,9 @@ export class GraphEditorComponent implements OnInit, OnDestroy, AfterViewInit {
   private handleCanvasMouseDown(event: MouseEvent): void {
     // Normal mode baseline: clear selection or start selection box
     if (this.currentMode?.name === 'normal') {
-      const svgRect = this.svgCanvas.nativeElement.getBoundingClientRect();
+      const svgRect = this.getActiveCanvasBoundingRect();
+      if (!svgRect) return;
+      
       const mouseX = event.clientX - svgRect.left;
       const mouseY = event.clientY - svgRect.top;
       if (this.isCtrlPressed) {
@@ -604,7 +614,9 @@ export class GraphEditorComponent implements OnInit, OnDestroy, AfterViewInit {
     if (this.modeManager.handleCanvasClick(event)) {
       return;
     }
-    const svgRect = this.svgCanvas.nativeElement.getBoundingClientRect();
+    const svgRect = this.getActiveCanvasBoundingRect();
+    if (!svgRect) return;
+    
     const mouseX = event.clientX - svgRect.left;
     const mouseY = event.clientY - svgRect.top;
     if (this.isCtrlPressed) {
@@ -639,7 +651,9 @@ export class GraphEditorComponent implements OnInit, OnDestroy, AfterViewInit {
   }
   
   private clearOverlay(): void {
-    const canvas = this.svgCanvas.nativeElement;
+    const canvas = this.getActiveCanvasElement();
+    if (!canvas) return;
+    
     const overlays = canvas.querySelectorAll('.pin-edit-overlay');
     overlays.forEach(el => el.remove());
   }
@@ -1202,12 +1216,11 @@ export class GraphEditorComponent implements OnInit, OnDestroy, AfterViewInit {
 
   // Central reference area methods
   getCentralReferenceArea(): { x: number; y: number; width: number; height: number } {
-    if (!this.svgCanvas?.nativeElement) {
+    const svgRect = this.getActiveCanvasBoundingRect();
+    if (!svgRect) {
       return { x: 0, y: 0, width: 0, height: 0 };
     }
 
-    const svgRect = this.svgCanvas.nativeElement.getBoundingClientRect();
-    
     // Create a rectangle covering the entire workspace for pin reference
     const width = svgRect.width;
     const height = svgRect.height;
@@ -1285,11 +1298,11 @@ export class GraphEditorComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   private findClosestPinToMouse(event: MouseEvent): { nodeId: string; pinName: string } | { nodeId: null; pinName: null } {
-    if (!this.svgCanvas?.nativeElement) {
+    const svgRect = this.getActiveCanvasBoundingRect();
+    if (!svgRect) {
       return { nodeId: null, pinName: null };
     }
 
-    const svgRect = this.svgCanvas.nativeElement.getBoundingClientRect();
     const mouseX = event.clientX - svgRect.left;
     const mouseY = event.clientY - svgRect.top;
     
@@ -1420,5 +1433,44 @@ export class GraphEditorComponent implements OnInit, OnDestroy, AfterViewInit {
 
   renderActiveOverlay(nativeElement: SVGElement) {
     this.modeManager.renderActiveOverlay(nativeElement);
+  }
+
+  // Feature flag canvas helper methods
+  getFeatureNodeFill(node: GraphNode): string {
+    if (this.selectedNodes.has(node.id)) {
+      return node.type === 'feature-enabled' ? '#16A34A' : '#DC2626';
+    }
+    return node.type === 'feature-enabled' ? '#22C55E' : '#EF4444';
+  }
+
+  getFeatureNodeStroke(node: GraphNode): string {
+    if (this.selectedNodes.has(node.id)) {
+      return node.type === 'feature-enabled' ? '#15803D' : '#B91C1C';
+    }
+    return node.type === 'feature-enabled' ? '#16A34A' : '#DC2626';
+  }
+
+  getFeatureNodeTextColor(node: GraphNode): string {
+    return 'white';
+  }
+
+  // Helper method to get the active canvas based on current mode
+  getActiveCanvas(): ElementRef<SVGElement> | null {
+    if (this.currentMode?.name === 'feature-flag') {
+      return this.featureFlagCanvas || null;
+    }
+    return this.svgCanvas || null;
+  }
+
+  // Helper method to get the active canvas native element
+  getActiveCanvasElement(): SVGElement | null {
+    const activeCanvas = this.getActiveCanvas();
+    return activeCanvas?.nativeElement || null;
+  }
+
+  // Helper method to get the active canvas bounding rect
+  getActiveCanvasBoundingRect(): DOMRect | null {
+    const activeCanvasElement = this.getActiveCanvasElement();
+    return activeCanvasElement?.getBoundingClientRect() || null;
   }
 }
