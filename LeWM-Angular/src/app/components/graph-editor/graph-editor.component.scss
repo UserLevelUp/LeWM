@@ -368,6 +368,17 @@
       filter: none !important;
     }
   }
+  
+  // Disable feature-status-indicator transitions and transforms to prevent hunting
+  .feature-status-indicator {
+    transition: none !important;
+    transform: none !important;
+    
+    &:hover {
+      transform: none !important;
+      filter: none !important;
+    }
+  }
 }
 
 // Feature flag specific node and pin styling
