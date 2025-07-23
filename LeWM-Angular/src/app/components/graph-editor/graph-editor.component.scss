@@ -284,6 +284,18 @@
   }
 }
 
+// Override pin-edit-mode rules when in feature flag mode to prevent conflicts
+:host.feature-flag-mode.pin-edit-mode {
+  .pin-group {
+    &:hover {
+      .pin-circle,
+      .feature-pin-circle {
+        transform: none !important;
+      }
+    }
+  }
+}
+
 // Feature Flag mode node styling
 .graph-node-group {
   &[data-type="feature-enabled"] rect {
@@ -324,6 +336,36 @@
     
     &.selected {
       filter: drop-shadow(0 0 8px rgba(33, 150, 243, 0.4));
+    }
+  }
+  
+  // Override all pin-related rules that cause hunting in feature flag mode
+  .pin-group {
+    // Disable all transitions and transforms for pin groups
+    .pin-circle,
+    .feature-pin-circle {
+      transition: none !important;
+      transform: none !important;
+    }
+    
+    // Disable hover effects that cause movement
+    &:hover {
+      .pin-circle,
+      .feature-pin-circle {
+        transform: none !important;
+        filter: none !important;
+      }
+    }
+  }
+  
+  // Specifically target any remaining pin-circle elements in feature flag mode
+  .pin-circle {
+    transition: none !important;
+    transform: none !important;
+    
+    &:hover {
+      transform: none !important;
+      filter: none !important;
     }
   }
 }
