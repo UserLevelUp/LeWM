@@ -1,4 +1,4 @@
-import { Component, ElementRef, HostListener, ViewChild, OnInit, OnDestroy, AfterViewInit, ChangeDetectorRef, inject } from '@angular/core';
+import { Component, ElementRef, HostListener, HostBinding, ViewChild, OnInit, OnDestroy, AfterViewInit, ChangeDetectorRef, inject } from '@angular/core';
 import { Observable, Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -121,6 +121,17 @@ export class GraphEditorComponent implements OnInit, OnDestroy, AfterViewInit {
   availableModes: GraphMode[] = [];
   private modeSubscription?: Subscription;
   private isNavigatingFromRoute = false;
+  
+  // Host binding for CSS classes based on current mode
+  @HostBinding('class.pin-edit-mode')
+  get isPinEditMode(): boolean {
+    return this.currentMode?.name === 'pin-edit';
+  }
+  
+  @HostBinding('class.feature-flag-mode')
+  get isFeatureFlagMode(): boolean {
+    return this.currentMode?.name === 'feature-flag';
+  }
   
   // Pin dialog state
   showPinDialog = false;
