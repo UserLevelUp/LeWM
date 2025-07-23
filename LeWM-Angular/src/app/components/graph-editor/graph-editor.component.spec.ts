@@ -348,6 +348,70 @@ describe('GraphEditorComponent', () => {
       expect(result.x).toBe(0);
       expect(result.y).toBe(0);
     });
+
+    it('should provide cached central reference area through getter', () => {
+      // Mock SVG canvas
+      const mockSvgElement = {
+        getBoundingClientRect: () => ({
+          width: 800,
+          height: 600,
+          x: 0,
+          y: 0,
+          left: 0,
+          top: 0,
+          right: 800,
+          bottom: 600
+        })
+      };
+
+      component.svgCanvas = { nativeElement: mockSvgElement as SVGElement };
+
+      // Call the method to populate the cached area
+      component.getCentralReferenceArea();
+
+      // Access the cached value through the getter
+      const cachedResult = component.centralReferenceArea;
+
+      // Should return the same cached values
+      expect(cachedResult.width).toBe(800);
+      expect(cachedResult.height).toBe(600);
+      expect(cachedResult.x).toBe(0);
+      expect(cachedResult.y).toBe(0);
+    });
+
+    it('should update central reference area on mode change', () => {
+      // Mock SVG canvas
+      const mockSvgElement = {
+        getBoundingClientRect: () => ({
+          width: 1000,
+          height: 800,
+          x: 0,
+          y: 0,
+          left: 0,
+          top: 0,
+          right: 1000,
+          bottom: 800
+        })
+      };
+
+      component.svgCanvas = { nativeElement: mockSvgElement as SVGElement };
+
+      // Manually set a different cached value
+      (component as any)._centralReferenceArea = { x: 50, y: 50, width: 100, height: 100 };
+
+      // Trigger mode change which should update the central reference area
+      component.currentMode = { name: 'pin-edit' } as any;
+      (component as any).updateCentralReferenceArea();
+
+      // Access the updated value through the getter
+      const updatedResult = component.centralReferenceArea;
+
+      // Should be updated to current canvas dimensions
+      expect(updatedResult.width).toBe(1000);
+      expect(updatedResult.height).toBe(800);
+      expect(updatedResult.x).toBe(0);
+      expect(updatedResult.y).toBe(0);
+    });
   });
 
   describe('Pin creation flow', () => {
