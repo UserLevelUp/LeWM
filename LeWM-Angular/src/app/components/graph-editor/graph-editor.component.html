@@ -324,6 +324,19 @@
       </defs>
       <rect id="feature-grid-rect" width="100%" height="100%" fill="url(#feature-grid)" />
       
+      <!-- Central pin reference rectangle for feature flag mode - handles all pin interactions -->
+      <rect class="feature-pin-reference-area"
+            [attr.x]="getCentralReferenceArea().x"
+            [attr.y]="getCentralReferenceArea().y"
+            [attr.width]="getCentralReferenceArea().width"
+            [attr.height]="getCentralReferenceArea().height"
+            fill="transparent"
+            stroke="none"
+            style="cursor: pointer;"
+            (mousedown)="onFeatureFlagPinReferenceMouseDown($event)"
+            (mousemove)="onFeatureFlagPinReferenceMouseMove($event)"
+            (mouseleave)="onFeatureFlagPinReferenceMouseLeave()" />
+      
       <!-- Feature Flag Connection Lines (Dependencies) -->
       <g *ngFor="let edge of edges$ | async" class="feature-connection-line">
         <!-- Dependency connection line -->
@@ -385,13 +398,26 @@
         <!-- Feature Flag Dependency Pins -->
         <g *ngIf="node.pins" class="pins feature-pins">
           <g *ngFor="let pin of node.pins" class="pin-group">
+            <!-- Pin hover background (visual feedback without movement) -->
+            <circle *ngIf="isPinHovered(node.id, pin.name)"
+                    [attr.cx]="node.x + pin.x"
+                    [attr.cy]="node.y + pin.y"
+                    r="8"
+                    fill="rgba(255, 107, 53, 0.2)"
+                    stroke="rgba(255, 107, 53, 0.4)"
+                    stroke-width="1"
+                    class="feature-pin-hover-bg"
+                    style="pointer-events: none;" />
+            
             <!-- Dependency pin -->
             <circle [attr.cx]="node.x + pin.x"
                     [attr.cy]="node.y + pin.y"
                     r="5"
-                    [attr.fill]="pin.name.startsWith('dep-') ? '#EF4444' : '#10B981'"
-                    stroke="white"
-                    stroke-width="2"
+                    [attr.fill]="isPinHovered(node.id, pin.name) ? 
+                                 (pin.name.startsWith('dep-') ? '#FF5722' : '#4CAF50') : 
+                                 (pin.name.startsWith('dep-') ? '#EF4444' : '#10B981')"
+                    [attr.stroke]="isPinHovered(node.id, pin.name) ? '#FF6B35' : 'white'"
+                    [attr.stroke-width]="isPinHovered(node.id, pin.name) ? '2' : '2'"
                     class="feature-pin-circle" />
             
             <!-- Pin label for dependencies -->
@@ -399,9 +425,9 @@
                   [attr.x]="node.x + pin.x - 12"
                   [attr.y]="node.y + pin.y + 3"
                   class="feature-pin-label"
-                  fill="#7C2D12"
+                  [attr.fill]="isPinHovered(node.id, pin.name) ? '#FF6B35' : '#7C2D12'"
+                  [attr.font-weight]="isPinHovered(node.id, pin.name) ? '600' : '500'"
                   font-size="9"
-                  font-weight="500"
                   text-anchor="end">
               requires
             </text>

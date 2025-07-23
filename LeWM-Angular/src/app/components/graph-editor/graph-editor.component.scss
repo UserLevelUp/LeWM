@@ -313,15 +313,17 @@
 :host.feature-flag-mode {
   .graph-node-group {
     cursor: pointer;
-    transition: all 0.2s ease;
+    // Remove transitions and transforms that cause pin hunting
+    transition: none;
     
+    // Remove hover transforms that move pins diagonally
     &:hover {
-      transform: scale(1.05);
-      filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.2));
+      // Use only visual effects that don't change element positioning
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15));
     }
     
     &.selected {
-      filter: drop-shadow(0 0 10px rgba(33, 150, 243, 0.5));
+      filter: drop-shadow(0 0 8px rgba(33, 150, 243, 0.4));
     }
   }
 }
@@ -333,7 +335,9 @@
   }
   
   .feature-pin-circle {
-    transition: all 0.2s ease;
+    // Remove transitions that cause hunting when interacting via reference rectangle
+    transition: none;
+    pointer-events: none; // Disable direct interaction to prevent hunting
   }
   
   .feature-pin-label {
@@ -345,13 +349,16 @@
     transition: all 0.2s ease;
   }
   
+  // Remove hover transforms that interfere with pin reference rectangle
   &:hover {
     .feature-node-body {
-      filter: brightness(1.1);
+      // Keep only safe visual changes that don't affect layout
+      filter: brightness(1.05);
     }
     
     .feature-status-indicator {
-      transform: scale(1.2);
+      // Subtle scale that doesn't affect pin positions
+      transform: scale(1.1);
     }
   }
 }

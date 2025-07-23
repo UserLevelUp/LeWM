@@ -1297,6 +1297,79 @@ export class GraphEditorComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
+  // Feature Flag mode pin reference methods
+  onFeatureFlagPinReferenceMouseDown(event: MouseEvent): void {
+    if (this.currentMode?.name !== 'feature-flag') return;
+    
+    const { nodeId, pinName } = this.findClosestPinToMouse(event);
+    if (nodeId && pinName) {
+      const node = this.currentNodes.find(n => n.id === nodeId);
+      
+      if (node) {
+        // Handle feature flag pin click through the mode
+        const pin = node.pins?.find(p => p.name === pinName);
+        if (pin) {
+          this.modeManager.handlePinClick(node, pin, event);
+        }
+      }
+    }
+  }
+
+  onFeatureFlagPinReferenceMouseMove(event: MouseEvent): void {
+    if (this.currentMode?.name !== 'feature-flag') return;
+    
+    const { nodeId, pinName } = this.findClosestPinToMouse(event);
+    
+    // Update hover state for feature flag pins
+    const previousHover = this.hoveredPin;
+    if (nodeId && pinName) {
+      this.hoveredPin = { nodeId, pinName };
+    } else {
+      this.hoveredPin = null;
+    }
+    
+    // Trigger hover events if hover changed
+    if (previousHover?.nodeId !== this.hoveredPin?.nodeId || 
+        previousHover?.pinName !== this.hoveredPin?.pinName) {
+      
+      if (previousHover) {
+        const prevNode = this.currentNodes.find(n => n.id === previousHover.nodeId);
+        const prevPinName = previousHover.pinName;
+        if (prevNode && prevPinName) {
+          this.onFeatureFlagPinHover(prevNode, prevPinName, false);
+        }
+      }
+      
+      if (this.hoveredPin) {
+        const currentNode = this.currentNodes.find(n => n.id === this.hoveredPin!.nodeId);
+        const currentPinName = this.hoveredPin!.pinName;
+        if (currentNode && currentPinName) {
+          this.onFeatureFlagPinHover(currentNode, currentPinName, true);
+        }
+      }
+    }
+  }
+
+  onFeatureFlagPinReferenceMouseLeave(): void {
+    if (this.currentMode?.name !== 'feature-flag') return;
+    
+    // Clear hover state when leaving the feature flag reference area
+    if (this.hoveredPin) {
+      const node = this.currentNodes.find(n => n.id === this.hoveredPin!.nodeId);
+      const pinName = this.hoveredPin!.pinName;
+      if (node && pinName) {
+        this.onFeatureFlagPinHover(node, pinName, false);
+      }
+      this.hoveredPin = null;
+    }
+  }
+
+  // Feature flag specific pin hover handling
+  onFeatureFlagPinHover(node: GraphNode, pinName: string, isHovering: boolean): void {
+    // Set the hover state without triggering CSS transforms that cause hunting
+    this.hoveredPin = isHovering ? { nodeId: node.id, pinName: pinName } : null;
+  }
+
   private findClosestPinToMouse(event: MouseEvent): { nodeId: string; pinName: string } | { nodeId: null; pinName: null } {
     const svgRect = this.getActiveCanvasBoundingRect();
     if (!svgRect) {
