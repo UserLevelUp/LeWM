@@ -284,6 +284,18 @@
   }
 }
 
+// Override pin-edit-mode rules when in feature flag mode to prevent conflicts
+:host.feature-flag-mode.pin-edit-mode {
+  .pin-group {
+    &:hover {
+      .pin-circle,
+      .feature-pin-circle {
+        transform: none !important;
+      }
+    }
+  }
+}
+
 // Feature Flag mode node styling
 .graph-node-group {
   &[data-type="feature-enabled"] rect {
@@ -313,15 +325,58 @@
 :host.feature-flag-mode {
   .graph-node-group {
     cursor: pointer;
-    transition: all 0.2s ease;
+    // Remove transitions and transforms that cause pin hunting
+    transition: none;
     
+    // Remove hover transforms that move pins diagonally
     &:hover {
-      transform: scale(1.05);
-      filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.2));
+      // Use only visual effects that don't change element positioning
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15));
     }
     
     &.selected {
-      filter: drop-shadow(0 0 10px rgba(33, 150, 243, 0.5));
+      filter: drop-shadow(0 0 8px rgba(33, 150, 243, 0.4));
+    }
+  }
+  
+  // Override all pin-related rules that cause hunting in feature flag mode
+  .pin-group {
+    // Disable all transitions and transforms for pin groups
+    .pin-circle,
+    .feature-pin-circle {
+      transition: none !important;
+      transform: none !important;
+    }
+    
+    // Disable hover effects that cause movement
+    &:hover {
+      .pin-circle,
+      .feature-pin-circle {
+        transform: none !important;
+        filter: none !important;
+      }
+    }
+  }
+  
+  // Specifically target any remaining pin-circle elements in feature flag mode
+  .pin-circle {
+    transition: none !important;
+    transform: none !important;
+    
+    &:hover {
+      transform: none !important;
+      filter: none !important;
+    }
+  }
+  
+  // Disable feature-status-indicator transitions and transforms to prevent hunting
+  .feature-status-indicator {
+    transition: none !important;
+    transform: none !important;
+    
+    &:hover {
+      transform: none !important;
+      filter: none !important;
     }
   }
 }
@@ -333,7 +388,9 @@
   }
   
   .feature-pin-circle {
-    transition: all 0.2s ease;
+    // Remove transitions that cause hunting when interacting via reference rectangle
+    transition: none;
+    pointer-events: none; // Disable direct interaction to prevent hunting
   }
   
   .feature-pin-label {
@@ -345,13 +402,16 @@
     transition: all 0.2s ease;
   }
   
+  // Remove hover transforms that interfere with pin reference rectangle
   &:hover {
     .feature-node-body {
-      filter: brightness(1.1);
+      // Keep only safe visual changes that don't affect layout
+      filter: brightness(1.05);
     }
     
     .feature-status-indicator {
-      transform: scale(1.2);
+      // Subtle scale that doesn't affect pin positions
+      transform: scale(1.1);
     }
   }
 }
