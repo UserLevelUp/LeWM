@@ -19,7 +19,8 @@ describe('FeatureFlagMode', () => {
     const graphStateSpy = jasmine.createSpyObj('GraphStateService', [
       'resetToDefaults', 
       'addNode', 
-      'updateNode'
+      'updateNode',
+      'clearNodes'
     ]);
 
     // Mock the observable
@@ -126,7 +127,7 @@ describe('FeatureFlagMode', () => {
 
     const result = mode.handlePinClick(mockNode, mockPin, mockEvent);
 
-    expect(result).toBe(true); // Handled as read-only
+    expect(result).toBe(false); // Let component handle pin reference rectangles
   });
 
   it('should handle keyboard shortcuts', () => {

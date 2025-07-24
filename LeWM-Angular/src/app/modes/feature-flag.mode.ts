@@ -47,19 +47,19 @@ export class FeatureFlagMode implements GraphMode {
     return true;
   }
   
-  handlePinClick(node: GraphNode, pin: { x: number; y: number; name: string }): boolean {
+  handlePinClick(node: GraphNode, pin: { x: number; y: number; name: string }, _event: MouseEvent): boolean {
     // Return false to let component handle pin reference rectangles
     // This maintains hover states and visual feedback
     console.log(`Feature Flag mode: Pin clicked on ${node.label}.${pin.name} (dependency visualization)`);
     return false;
   }
   
-  handleCanvasClick(): boolean {
+  handleCanvasClick(_event: MouseEvent): boolean {
     // Clear selection on canvas click
     return false; // Let component handle selection clearing
   }
   
-  handleMouseMove(): boolean {
+  handleMouseMove(_event: MouseEvent): boolean {
     // Feature flag mode doesn't need special mouse move handling
     return false;
   }
