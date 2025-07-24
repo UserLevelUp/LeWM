@@ -23,15 +23,18 @@ describe('Mode Switching Integration', () => {
     graphStateService = TestBed.inject(GraphStateService);
     featureGraphService = TestBed.inject(FeatureGraphService);
     
+    // Clear storage before each test
+    localStorage.clear();
+    sessionStorage.clear();
+    
+    // Wait for graph state service to initialize
+    await graphStateService.waitForInitialization();
+    
     // Initialize feature graph service
     await featureGraphService.loadFeatures();
     
     normalMode = new NormalMode(graphStateService);
     featureFlagMode = new FeatureFlagMode(featureGraphService, graphStateService);
-
-    // Clear storage before each test
-    localStorage.clear();
-    sessionStorage.clear();
   });
 
   afterEach(() => {

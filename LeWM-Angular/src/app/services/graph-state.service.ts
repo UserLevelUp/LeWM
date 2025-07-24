@@ -4,6 +4,22 @@ import { GraphNode } from '../models/graph-node.model';
 import { GraphEdge } from '../models/graph-edge.model';
 import { ConnectionStateService } from './connection-state.service';
 import { HttpClient } from '@angular/common/http';
+import { Pin, DEFAULT_PIN_TEXT_STYLE, LegacyPin } from '../interfaces/pin.interface';
+
+// GraphData interface matching the file save format
+interface GraphData {
+  version: string;
+  metadata: {
+    created: string;
+    modified: string;
+    name: string;
+    description?: string;
+  };
+  nodes: GraphNode[];
+  pins?: Pin[];
+  connections?: GraphEdge[];
+  edges?: GraphEdge[]; // For backward compatibility
+}
 
 @Injectable({
   providedIn: 'root'
@@ -16,6 +32,7 @@ export class GraphStateService {
   private readonly LOCAL_GRAPH_SESSION_KEY = 'lewm-local-graph-session';
   
   private readonly http = inject(HttpClient);
+  private initializationPromise: Promise<void>;
   // Default initial data
   private readonly defaultNodes: GraphNode[] = [
     { id: 'power', type: 'power', x: 100, y: 150, width: 80, height: 60, label: '9V Battery', pins: [{x: 80, y: 20, name: '+9V'}, {x: 80, y: 40, name: 'GND'}] },
@@ -41,7 +58,14 @@ export class GraphStateService {
 
   constructor() {
     // Initialize with empty state and load asynchronously
-    this.initializeGraph();
+    this.initializationPromise = this.initializeGraph();
+  }
+
+  /**
+   * Wait for the service to be fully initialized
+   */
+  async waitForInitialization(): Promise<void> {
+    return this.initializationPromise;
   }
 
   /**
@@ -98,11 +122,11 @@ export class GraphStateService {
    */
   private async loadFromDefaultFile(): Promise<{ nodes: GraphNode[], edges: GraphEdge[] }> {
     try {
-      const defaultGraph = await this.http.get<{ nodes: GraphNode[], edges: GraphEdge[] }>('/assets/default.graph.json').toPromise();
+      const defaultGraph = await this.http.get<GraphData>('/assets/default.graph.json').toPromise();
       if (!defaultGraph) {
         throw new Error('Default graph data is null');
       }
-      return defaultGraph;
+      return this.extractNodesAndEdges(defaultGraph);
     } catch (error) {
       console.warn('Failed to load default.graph.json, using hardcoded defaults:', error);
       return {
@@ -380,13 +404,73 @@ export class GraphStateService {
   }
   
   /**
+   * Extract pins from all nodes in the format used by file save
+   */
+  private getAllPinsFromNodes(): Pin[] {
+    const nodes = this._nodes.getValue();
+    const pins: Pin[] = [];
+
+    nodes.forEach(node => {
+      if (node.pins) {
+        node.pins.forEach((pin: LegacyPin) => {
+          pins.push({
+            id: `${node.id}.${pin.name}`,
+            nodeId: node.id,
+            label: pin.name,
+            position: {
+              side: 'left',
+              offset: 0.5,
+              x: pin.x,
+              y: pin.y
+            },
+            pinType: 'input',
+            pinStyle: {
+              size: 8,
+              color: '#000000',
+              shape: 'circle',
+              borderWidth: 1,
+              borderColor: '#000000'
+            },
+            textStyle: DEFAULT_PIN_TEXT_STYLE,
+            isInput: true,
+            isOutput: false,
+            pinNumber: '',
+            signalName: '',
+            pinSize: 4,
+            pinColor: '#000000',
+            showPinNumber: false
+          });
+        });
+      }
+    });
+
+    return pins;
+  }
+
+  /**
    * Save current graph state to both localStorage and sessionStorage as "local graph"
+   * Uses the same format as file save for consistency
    */
   private saveLocalGraph(): void {
     try {
-      const graphData = {
-        nodes: this._nodes.getValue(),
-        edges: this.connections.getEdges()
+      const graphData: GraphData = {
+        version: '1.0',
+        metadata: {
+          created: new Date().toISOString(),
+          modified: new Date().toISOString(),
+          name: 'Untitled Graph',
+          description: ''
+        },
+        nodes: this._nodes.getValue().map(node => ({
+          ...node,
+          x: node.x,
+          y: node.y,
+          width: node.width,
+          height: node.height,
+          style: node.style || {}
+        })),
+        pins: this.getAllPinsFromNodes(),
+        connections: this.connections.getEdges()
       };
       
       // Save to both localStorage and sessionStorage
@@ -411,6 +495,33 @@ export class GraphStateService {
   }
   
   /**
+   * Extract nodes and edges from GraphData format, handling both new and old formats
+   */
+  private extractNodesAndEdges(graphData: GraphData | any): { nodes: GraphNode[], edges: GraphEdge[] } {
+    // Handle new GraphData format
+    if (graphData.version && graphData.metadata && graphData.nodes) {
+      return {
+        nodes: graphData.nodes,
+        edges: graphData.connections || graphData.edges || []
+      };
+    }
+    
+    // Handle old format for backward compatibility
+    if (graphData.nodes && graphData.edges) {
+      return {
+        nodes: graphData.nodes,
+        edges: graphData.edges
+      };
+    }
+    
+    // Fallback
+    return {
+      nodes: graphData.nodes || [],
+      edges: graphData.edges || graphData.connections || []
+    };
+  }
+
+  /**
    * Load graph data from sessionStorage
    */
   private loadFromSessionStorage(): { nodes: GraphNode[], edges: GraphEdge[] } | null {
@@ -418,9 +529,9 @@ export class GraphStateService {
       // Try to load full graph first
       const fullGraphData = sessionStorage.getItem(this.LOCAL_GRAPH_SESSION_KEY);
       if (fullGraphData) {
-        const graphData = JSON.parse(fullGraphData);
+        const graphData: GraphData = JSON.parse(fullGraphData);
         console.log('📥 Loaded full graph from sessionStorage');
-        return graphData;
+        return this.extractNodesAndEdges(graphData);
       }
 
       // Fallback to nodes-only data
@@ -444,9 +555,9 @@ export class GraphStateService {
       // Try to load full graph first
       const fullGraphData = localStorage.getItem(this.LOCAL_GRAPH_KEY);
       if (fullGraphData) {
-        const graphData = JSON.parse(fullGraphData);
+        const graphData: GraphData = JSON.parse(fullGraphData);
         console.log('📥 Loaded full graph from localStorage');
-        return graphData;
+        return this.extractNodesAndEdges(graphData);
       }
 
       // Fallback to nodes-only data for backward compatibility
@@ -467,9 +578,20 @@ export class GraphStateService {
    */
   saveNormalModeState(): void {
     try {
-      const graphData = {
-        nodes: this._nodes.getValue(),
-        edges: this.connections.getEdges()
+      const graphData: GraphData = {
+        version: '1.0',
+        metadata: {
+          created: new Date().toISOString(),
+          modified: new Date().toISOString(),
+          name: 'Normal Mode Backup',
+          description: 'Temporary backup of normal mode state'
+        },
+        nodes: this._nodes.getValue().map(node => ({
+          ...node,
+          style: node.style || {}
+        })),
+        pins: this.getAllPinsFromNodes(),
+        connections: this.connections.getEdges()
       };
       
       sessionStorage.setItem('lewm-normal-mode-backup', JSON.stringify(graphData));
@@ -486,9 +608,10 @@ export class GraphStateService {
     try {
       const backupData = sessionStorage.getItem('lewm-normal-mode-backup');
       if (backupData) {
-        const graphData = JSON.parse(backupData);
-        this._nodes.next(graphData.nodes);
-        this.connections.setEdges(graphData.edges);
+        const graphData: GraphData = JSON.parse(backupData);
+        const extracted = this.extractNodesAndEdges(graphData);
+        this._nodes.next(extracted.nodes);
+        this.connections.setEdges(extracted.edges);
         console.log('📥 Restored normal mode state');
         return true;
       }

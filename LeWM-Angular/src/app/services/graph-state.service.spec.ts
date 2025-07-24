@@ -223,7 +223,7 @@ describe('GraphStateService', () => {
       expect(restored).toBe(false);
 
       // The service should handle this gracefully
-      expect(service.getNodes).not.toThrow();
+      expect(() => service.getNodes()).not.toThrow();
     });
   });
 });

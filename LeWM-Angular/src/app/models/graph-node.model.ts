@@ -9,6 +9,7 @@ export interface GraphNode {
   value?: string; // Optional value (can be number, string, symbols, etc.)
   unit?: string; // Optional unit string representation
   pins?: Pin[]; // Optional connection points for domain-specific nodes
+  style?: { [key: string]: any }; // Optional style properties for consistent format
 }
 
 export interface Pin {
