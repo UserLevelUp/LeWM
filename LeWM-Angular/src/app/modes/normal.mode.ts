@@ -12,11 +12,29 @@ export class NormalMode implements GraphMode {
   activate(): void {
     console.log('Normal mode activated');
     this.selectedPins.clear();
+    
+    // Ensure we have the latest user changes when activating normal mode
+    // The GraphStateService should already be using priority loading,
+    // but we can trigger a reload if needed
+    this.ensureLatestNormalModeState();
   }
-  
+
   deactivate(): void {
     console.log('Normal mode deactivated');
     this.selectedPins.clear();
+    
+    // Save current state before leaving normal mode
+    this.graphState.saveNormalModeState();
+  }
+
+  /**
+   * Ensure that normal mode displays the latest user changes
+   */
+  private ensureLatestNormalModeState(): void {
+    // The GraphStateService will automatically load from priority storage
+    // (sessionStorage -> localStorage -> default file) during initialization.
+    // No additional action needed here as the service handles this automatically.
+    console.log('Normal mode: Latest state should be loaded via priority storage');
   }
   
   handleNodeClick(): boolean {

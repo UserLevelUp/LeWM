@@ -18,6 +18,10 @@ export class FeatureFlagMode implements GraphMode {
   activate(): void {
     console.log('Feature Flag mode activated');
     this.selectedPins.clear();
+    
+    // Save current normal mode state before switching to feature flag mode
+    this.graphState.saveNormalModeState();
+    
     // Clear canvas immediately when entering Feature Flag Mode - remove circuit nodes
     this.graphState.clearNodes();
     this.loadFeatureGraph();
@@ -26,8 +30,13 @@ export class FeatureFlagMode implements GraphMode {
   deactivate(): void {
     console.log('Feature Flag mode deactivated');
     this.selectedPins.clear();
-    // Reset to defaults when leaving feature flag mode
-    this.graphState.resetToDefaults();
+    
+    // Restore the saved normal mode state instead of resetting to defaults
+    const restored = this.graphState.restoreNormalModeState();
+    if (!restored) {
+      console.warn('Failed to restore normal mode state, falling back to defaults');
+      this.graphState.resetToDefaults();
+    }
   }
   
   handleNodeClick(node: GraphNode, event: MouseEvent): boolean {

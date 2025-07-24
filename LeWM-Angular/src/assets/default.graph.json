@@ -1,0 +1,77 @@
+{
+  "nodes": [
+    { 
+      "id": "power", 
+      "type": "power", 
+      "x": 100, 
+      "y": 150, 
+      "width": 80, 
+      "height": 60, 
+      "label": "9V Battery", 
+      "pins": [
+        {"x": 80, "y": 20, "name": "+9V"}, 
+        {"x": 80, "y": 40, "name": "GND"}
+      ] 
+    },
+    { 
+      "id": "reg", 
+      "type": "ic", 
+      "x": 250, 
+      "y": 150, 
+      "width": 60, 
+      "height": 40, 
+      "label": "LM7805", 
+      "pins": [
+        {"x": 0, "y": 20, "name": "IN"}, 
+        {"x": 30, "y": 40, "name": "GND"}, 
+        {"x": 60, "y": 20, "name": "OUT"}
+      ] 
+    },
+    { 
+      "id": "mic1", 
+      "type": "component", 
+      "x": 100, 
+      "y": 250, 
+      "width": 40, 
+      "height": 40, 
+      "label": "MIC1", 
+      "pins": [
+        {"x": 40, "y": 20, "name": "OUT"}, 
+        {"x": 20, "y": 40, "name": "GND"}
+      ] 
+    },
+    { 
+      "id": "r1", 
+      "type": "resistor", 
+      "x": 180, 
+      "y": 270, 
+      "width": 60, 
+      "height": 20, 
+      "label": "10kΩ", 
+      "pins": [
+        {"x": 0, "y": 10, "name": "A"}, 
+        {"x": 60, "y": 10, "name": "B"}
+      ] 
+    },
+    { 
+      "id": "amp1", 
+      "type": "ic", 
+      "x": 300, 
+      "y": 230, 
+      "width": 80, 
+      "height": 60, 
+      "label": "LM386", 
+      "pins": [
+        {"x": 0, "y": 15, "name": "GAIN"}, 
+        {"x": 0, "y": 30, "name": "-IN"}, 
+        {"x": 0, "y": 45, "name": "+IN"},
+        {"x": 20, "y": 60, "name": "GND"}, 
+        {"x": 40, "y": 60, "name": "VCC"}, 
+        {"x": 60, "y": 60, "name": "BYP"},
+        {"x": 80, "y": 45, "name": "OUT"}, 
+        {"x": 80, "y": 15, "name": "VS"}
+      ]
+    }
+  ],
+  "edges": []
+}

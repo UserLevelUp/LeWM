@@ -3,11 +3,19 @@ import { BehaviorSubject } from 'rxjs';
 import { GraphNode } from '../models/graph-node.model';
 import { GraphEdge } from '../models/graph-edge.model';
 import { ConnectionStateService } from './connection-state.service';
+import { HttpClient } from '@angular/common/http';
 
 @Injectable({
   providedIn: 'root'
 })
 export class GraphStateService {
+  // Storage keys
+  private readonly NODES_LOCAL_KEY = 'lewm-graph-nodes';
+  private readonly NODES_SESSION_KEY = 'lewm-graph-nodes-session';
+  private readonly LOCAL_GRAPH_KEY = 'lewm-local-graph';
+  private readonly LOCAL_GRAPH_SESSION_KEY = 'lewm-local-graph-session';
+  
+  private readonly http = inject(HttpClient);
   // Default initial data
   private readonly defaultNodes: GraphNode[] = [
     { id: 'power', type: 'power', x: 100, y: 150, width: 80, height: 60, label: '9V Battery', pins: [{x: 80, y: 20, name: '+9V'}, {x: 80, y: 40, name: 'GND'}] },
@@ -21,14 +29,79 @@ export class GraphStateService {
     ]},
   ];
   
-  // Use _nodes for internal node state management
-  private readonly _nodes = new BehaviorSubject<GraphNode[]>(this.loadFromLocalStorage() || this.defaultNodes);
+  // Use _nodes for internal node state management - load with priority loading
+  private readonly _nodes = new BehaviorSubject<GraphNode[]>([]);
 
   // Expose nodes as observable for components to subscribe to
   readonly nodes$ = this._nodes.asObservable();
   private readonly connections = inject(ConnectionStateService);
   get edges$() {
     return this.connections.edges$;
+  }
+
+  constructor() {
+    // Initialize with priority loading
+    this.initializeGraph();
+  }
+
+  /**
+   * Initialize graph with priority loading: sessionStorage -> localStorage -> default JSON file
+   */
+  private async initializeGraph(): Promise<void> {
+    try {
+      const graphData = await this.loadGraphWithPriority();
+      this._nodes.next(graphData.nodes);
+      this.connections.setEdges(graphData.edges);
+      console.log('📊 Graph initialized with priority loading');
+    } catch (error) {
+      console.error('Failed to initialize graph:', error);
+      // Fallback to hardcoded defaults
+      this._nodes.next(this.defaultNodes);
+      this.connections.resetToDefaults();
+    }
+  }
+
+  /**
+   * Load graph data with priority: sessionStorage -> localStorage -> default JSON file
+   */
+  private async loadGraphWithPriority(): Promise<{ nodes: GraphNode[], edges: GraphEdge[] }> {
+    // Try sessionStorage first
+    const sessionData = this.loadFromSessionStorage();
+    if (sessionData) {
+      console.log('📥 Loaded graph from sessionStorage');
+      return sessionData;
+    }
+
+    // Try localStorage second
+    const localData = this.loadFromLocalStorage();
+    if (localData) {
+      console.log('📥 Loaded graph from localStorage');
+      return localData;
+    }
+
+    // Finally, try default JSON file
+    try {
+      const defaultData = await this.loadFromDefaultFile();
+      console.log('📥 Loaded graph from default JSON file');
+      return defaultData;
+    } catch (error) {
+      console.warn('Failed to load default JSON, using hardcoded defaults');
+      return {
+        nodes: this.defaultNodes,
+        edges: []
+      };
+    }
+  }
+
+  /**
+   * Load default graph from JSON file
+   */
+  private async loadFromDefaultFile(): Promise<{ nodes: GraphNode[], edges: GraphEdge[] }> {
+    const defaultGraph = await this.http.get<{ nodes: GraphNode[], edges: GraphEdge[] }>('/assets/default.graph.json').toPromise();
+    if (!defaultGraph) {
+      throw new Error('Failed to load default graph');
+    }
+    return defaultGraph;
   }
 
   // Method to get the current snapshot of nodes
@@ -43,6 +116,8 @@ export class GraphStateService {
   addNode(node: GraphNode): void {
     const currentNodes = this._nodes.getValue();
     this._nodes.next([...currentNodes, node]);
+    // Auto-save changes as local graph
+    this.saveLocalGraph();
   }
 
   /**
@@ -56,6 +131,8 @@ export class GraphStateService {
       return update ? { ...node, x: update.x, y: update.y } : node;
     });
     this._nodes.next(updatedNodes);
+    // Auto-save changes as local graph
+    this.saveLocalGraph();
   }
 
   /**
@@ -117,6 +194,8 @@ export class GraphStateService {
       console.log(`Removed ${removedConnections} connections due to node deletion`);
     }
 
+    // Auto-save changes as local graph
+    this.saveLocalGraph();
     this.connections.setEdges(filteredEdges);
   }
 
@@ -293,33 +372,122 @@ export class GraphStateService {
   }
   
   /**
-   * Save nodes to localStorage for persistence
+   * Save current graph state to both localStorage and sessionStorage as "local graph"
+   */
+  private saveLocalGraph(): void {
+    try {
+      const graphData = {
+        nodes: this._nodes.getValue(),
+        edges: this.connections.getEdges()
+      };
+      
+      // Save to both localStorage and sessionStorage
+      localStorage.setItem(this.LOCAL_GRAPH_KEY, JSON.stringify(graphData));
+      sessionStorage.setItem(this.LOCAL_GRAPH_SESSION_KEY, JSON.stringify(graphData));
+      
+      // Also update the standard keys for backward compatibility
+      localStorage.setItem(this.NODES_LOCAL_KEY, JSON.stringify(graphData.nodes));
+      sessionStorage.setItem(this.NODES_SESSION_KEY, JSON.stringify(graphData.nodes));
+      
+      console.log('💾 Saved local graph to localStorage and sessionStorage');
+    } catch (error) {
+      console.error('Failed to save local graph:', error);
+    }
+  }
+
+  /**
+   * Legacy method for backward compatibility
    */
   private saveToLocalStorage(): void {
-    try {
-      const nodes = this._nodes.getValue();
-      localStorage.setItem('lewm-graph-nodes', JSON.stringify(nodes));
-      console.log('💾 Saved nodes to localStorage');
-    } catch (error) {
-      console.error('Failed to save to localStorage:', error);
-    }
+    this.saveLocalGraph();
   }
   
   /**
-   * Load nodes from localStorage
+   * Load graph data from sessionStorage
    */
-  private loadFromLocalStorage(): GraphNode[] | null {
+  private loadFromSessionStorage(): { nodes: GraphNode[], edges: GraphEdge[] } | null {
     try {
-      const saved = localStorage.getItem('lewm-graph-nodes');
-      if (saved) {
-        const nodes = JSON.parse(saved);
+      // Try to load full graph first
+      const fullGraphData = sessionStorage.getItem(this.LOCAL_GRAPH_SESSION_KEY);
+      if (fullGraphData) {
+        const graphData = JSON.parse(fullGraphData);
+        console.log('📥 Loaded full graph from sessionStorage');
+        return graphData;
+      }
+
+      // Fallback to nodes-only data
+      const nodesData = sessionStorage.getItem(this.NODES_SESSION_KEY);
+      if (nodesData) {
+        const nodes = JSON.parse(nodesData);
+        console.log('📥 Loaded nodes from sessionStorage');
+        return { nodes, edges: [] };
+      }
+    } catch (error) {
+      console.error('Failed to load from sessionStorage:', error);
+    }
+    return null;
+  }
+
+  /**
+   * Load graph data from localStorage  
+   */
+  private loadFromLocalStorage(): { nodes: GraphNode[], edges: GraphEdge[] } | null {
+    try {
+      // Try to load full graph first
+      const fullGraphData = localStorage.getItem(this.LOCAL_GRAPH_KEY);
+      if (fullGraphData) {
+        const graphData = JSON.parse(fullGraphData);
+        console.log('📥 Loaded full graph from localStorage');
+        return graphData;
+      }
+
+      // Fallback to nodes-only data for backward compatibility
+      const nodesData = localStorage.getItem(this.NODES_LOCAL_KEY);
+      if (nodesData) {
+        const nodes = JSON.parse(nodesData);
         console.log('📥 Loaded nodes from localStorage');
-        return nodes;
+        return { nodes, edges: [] };
       }
     } catch (error) {
       console.error('Failed to load from localStorage:', error);
     }
     return null;
+  }
+
+  /**
+   * Save the current normal mode graph state for restoration
+   */
+  saveNormalModeState(): void {
+    try {
+      const graphData = {
+        nodes: this._nodes.getValue(),
+        edges: this.connections.getEdges()
+      };
+      
+      sessionStorage.setItem('lewm-normal-mode-backup', JSON.stringify(graphData));
+      console.log('💾 Saved normal mode state for restoration');
+    } catch (error) {
+      console.error('Failed to save normal mode state:', error);
+    }
+  }
+
+  /**
+   * Restore the normal mode graph state
+   */
+  restoreNormalModeState(): boolean {
+    try {
+      const backupData = sessionStorage.getItem('lewm-normal-mode-backup');
+      if (backupData) {
+        const graphData = JSON.parse(backupData);
+        this._nodes.next(graphData.nodes);
+        this.connections.setEdges(graphData.edges);
+        console.log('📥 Restored normal mode state');
+        return true;
+      }
+    } catch (error) {
+      console.error('Failed to restore normal mode state:', error);
+    }
+    return false;
   }
   
   /**
