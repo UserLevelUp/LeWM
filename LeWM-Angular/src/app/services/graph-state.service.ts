@@ -40,7 +40,7 @@ export class GraphStateService {
   }
 
   constructor() {
-    // Initialize with priority loading
+    // Initialize with empty state and load asynchronously
     this.initializeGraph();
   }
 
@@ -97,11 +97,19 @@ export class GraphStateService {
    * Load default graph from JSON file
    */
   private async loadFromDefaultFile(): Promise<{ nodes: GraphNode[], edges: GraphEdge[] }> {
-    const defaultGraph = await this.http.get<{ nodes: GraphNode[], edges: GraphEdge[] }>('/assets/default.graph.json').toPromise();
-    if (!defaultGraph) {
-      throw new Error('Failed to load default graph');
+    try {
+      const defaultGraph = await this.http.get<{ nodes: GraphNode[], edges: GraphEdge[] }>('/assets/default.graph.json').toPromise();
+      if (!defaultGraph) {
+        throw new Error('Default graph data is null');
+      }
+      return defaultGraph;
+    } catch (error) {
+      console.warn('Failed to load default.graph.json, using hardcoded defaults:', error);
+      return {
+        nodes: this.defaultNodes,
+        edges: []
+      };
     }
-    return defaultGraph;
   }
 
   // Method to get the current snapshot of nodes
@@ -489,6 +497,13 @@ export class GraphStateService {
     }
     return false;
   }
+
+  /**
+   * Manually reload graph data using priority loading
+   */
+  async reloadGraphWithPriority(): Promise<void> {
+    await this.initializeGraph();
+  }
   
   /**
    * Clear all nodes and connections without loading defaults
@@ -503,8 +518,16 @@ export class GraphStateService {
    * Clear saved data and reset to defaults
    */
   resetToDefaults(): void {
-    localStorage.removeItem('lewm-graph-nodes');
-    localStorage.removeItem('lewm-enhanced-pin-properties'); // Clear enhanced properties too
+    // Clear all storage keys
+    localStorage.removeItem(this.NODES_LOCAL_KEY);
+    localStorage.removeItem(this.LOCAL_GRAPH_KEY);
+    localStorage.removeItem('lewm-enhanced-pin-properties');
+    localStorage.removeItem('lewm-normal-mode-backup');
+    
+    sessionStorage.removeItem(this.NODES_SESSION_KEY);
+    sessionStorage.removeItem(this.LOCAL_GRAPH_SESSION_KEY);
+    sessionStorage.removeItem('lewm-normal-mode-backup');
+    
     this._nodes.next(this.defaultNodes);
     this.connections.resetToDefaults();
     console.log('🔄 Reset to default data');
