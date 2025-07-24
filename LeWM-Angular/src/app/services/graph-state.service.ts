@@ -6,7 +6,7 @@ import { ConnectionStateService } from './connection-state.service';
 import { HttpClient } from '@angular/common/http';
 import { Pin, DEFAULT_PIN_TEXT_STYLE, LegacyPin } from '../interfaces/pin.interface';
 
-// GraphData interface matching the file save format
+// GraphData interface matching the file save format with features support
 interface GraphData {
   version: string;
   metadata: {
@@ -19,6 +19,11 @@ interface GraphData {
   pins?: Pin[];
   connections?: GraphEdge[];
   edges?: GraphEdge[]; // For backward compatibility
+  features?: {
+    'feature-nodes': GraphNode[];
+    'featurePins': Pin[];
+    'feature-connections': GraphEdge[];
+  };
 }
 
 @Injectable({
@@ -30,6 +35,9 @@ export class GraphStateService {
   private readonly NODES_SESSION_KEY = 'lewm-graph-nodes-session';
   private readonly LOCAL_GRAPH_KEY = 'lewm-local-graph';
   private readonly LOCAL_GRAPH_SESSION_KEY = 'lewm-local-graph-session';
+  
+  // Feature storage keys
+  private readonly FEATURE_BACKUP_KEY = 'lewm-feature-mode-backup';
   
   private readonly http = inject(HttpClient);
   private initializationPromise: Promise<void>;
@@ -449,10 +457,13 @@ export class GraphStateService {
 
   /**
    * Save current graph state to both localStorage and sessionStorage as "local graph"
-   * Uses the same format as file save for consistency
+   * Uses the same format as file save for consistency, including features separation
    */
   private saveLocalGraph(): void {
     try {
+      // Get feature data from storage if it exists
+      const existingFeatureData = this.loadFeatureDataFromStorage();
+      
       const graphData: GraphData = {
         version: '1.0',
         metadata: {
@@ -470,7 +481,12 @@ export class GraphStateService {
           style: node.style || {}
         })),
         pins: this.getAllPinsFromNodes(),
-        connections: this.connections.getEdges()
+        connections: this.connections.getEdges(),
+        features: existingFeatureData || {
+          'feature-nodes': [],
+          'featurePins': [],
+          'feature-connections': []
+        }
       };
       
       // Save to both localStorage and sessionStorage
@@ -481,7 +497,7 @@ export class GraphStateService {
       localStorage.setItem(this.NODES_LOCAL_KEY, JSON.stringify(graphData.nodes));
       sessionStorage.setItem(this.NODES_SESSION_KEY, JSON.stringify(graphData.nodes));
       
-      console.log('💾 Saved local graph to localStorage and sessionStorage');
+      console.log('💾 Saved local graph to localStorage and sessionStorage with features separation');
     } catch (error) {
       console.error('Failed to save local graph:', error);
     }
@@ -646,13 +662,108 @@ export class GraphStateService {
     localStorage.removeItem(this.LOCAL_GRAPH_KEY);
     localStorage.removeItem('lewm-enhanced-pin-properties');
     localStorage.removeItem('lewm-normal-mode-backup');
+    localStorage.removeItem(this.FEATURE_BACKUP_KEY);
     
     sessionStorage.removeItem(this.NODES_SESSION_KEY);
     sessionStorage.removeItem(this.LOCAL_GRAPH_SESSION_KEY);
     sessionStorage.removeItem('lewm-normal-mode-backup');
+    sessionStorage.removeItem(this.FEATURE_BACKUP_KEY);
     
     this._nodes.next(this.defaultNodes);
     this.connections.resetToDefaults();
     console.log('🔄 Reset to default data');
+  }
+
+  /**
+   * Load feature data from storage (for maintaining feature state)
+   */
+  private loadFeatureDataFromStorage(): { 'feature-nodes': GraphNode[], 'featurePins': Pin[], 'feature-connections': GraphEdge[] } | null {
+    try {
+      // Try sessionStorage first
+      const sessionData = sessionStorage.getItem(this.LOCAL_GRAPH_SESSION_KEY);
+      if (sessionData) {
+        const parsed = JSON.parse(sessionData);
+        if (parsed.features) {
+          return parsed.features;
+        }
+      }
+
+      // Try localStorage second  
+      const localData = localStorage.getItem(this.LOCAL_GRAPH_KEY);
+      if (localData) {
+        const parsed = JSON.parse(localData);
+        if (parsed.features) {
+          return parsed.features;
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to load feature data from storage:', error);
+    }
+    return null;
+  }
+
+  /**
+   * Save feature mode state for restoration
+   */
+  saveFeatureModeState(): void {
+    try {
+      const featureData = {
+        'feature-nodes': this._nodes.getValue().map(node => ({
+          ...node,
+          style: node.style || {}
+        })),
+        'featurePins': this.getAllPinsFromNodes(),
+        'feature-connections': this.connections.getEdges()
+      };
+      
+      // Save feature data to existing graph structure
+      this.saveFeatureDataToStorage(featureData);
+      console.log('💾 Saved feature mode state for restoration');
+    } catch (error) {
+      console.error('Failed to save feature mode state:', error);
+    }
+  }
+
+  /**
+   * Restore the feature mode graph state
+   */
+  restoreFeatureModeState(): boolean {
+    try {
+      const featureData = this.loadFeatureDataFromStorage();
+      if (featureData && featureData['feature-nodes'].length > 0) {
+        this._nodes.next(featureData['feature-nodes']);
+        this.connections.setEdges(featureData['feature-connections'] || []);
+        console.log('📥 Restored feature mode state');
+        return true;
+      }
+    } catch (error) {
+      console.error('Failed to restore feature mode state:', error);
+    }
+    return false;
+  }
+
+  /**
+   * Save feature data to the graph storage structure
+   */
+  private saveFeatureDataToStorage(featureData: { 'feature-nodes': GraphNode[], 'featurePins': Pin[], 'feature-connections': GraphEdge[] }): void {
+    try {
+      // Update existing localStorage data
+      const localData = localStorage.getItem(this.LOCAL_GRAPH_KEY);
+      if (localData) {
+        const graphData = JSON.parse(localData);
+        graphData.features = featureData;
+        localStorage.setItem(this.LOCAL_GRAPH_KEY, JSON.stringify(graphData));
+      }
+
+      // Update existing sessionStorage data
+      const sessionData = sessionStorage.getItem(this.LOCAL_GRAPH_SESSION_KEY);
+      if (sessionData) {
+        const graphData = JSON.parse(sessionData);
+        graphData.features = featureData;
+        sessionStorage.setItem(this.LOCAL_GRAPH_SESSION_KEY, JSON.stringify(graphData));
+      }
+    } catch (error) {
+      console.error('Failed to save feature data to storage:', error);
+    }
   }
 }

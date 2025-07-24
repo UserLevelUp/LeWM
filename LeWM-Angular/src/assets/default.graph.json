@@ -85,5 +85,10 @@
       "style": {}
     }
   ],
-  "connections": []
+  "connections": [],
+  "features": {
+    "feature-nodes": [],
+    "featurePins": [],
+    "feature-connections": []
+  }
 }

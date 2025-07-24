@@ -22,14 +22,21 @@ export class FeatureFlagMode implements GraphMode {
     // Save current normal mode state before switching to feature flag mode
     this.graphState.saveNormalModeState();
     
-    // Clear canvas immediately when entering Feature Flag Mode - remove circuit nodes
-    this.graphState.clearNodes();
-    this.loadFeatureGraph();
+    // Try to restore previous feature mode state first
+    const restored = this.graphState.restoreFeatureModeState();
+    if (!restored) {
+      // Clear canvas and load feature graph if no previous state
+      this.graphState.clearNodes();
+      this.loadFeatureGraph();
+    }
   }
   
   deactivate(): void {
     console.log('Feature Flag mode deactivated');
     this.selectedPins.clear();
+    
+    // Save current feature mode state before switching back to normal mode
+    this.graphState.saveFeatureModeState();
     
     // Restore the saved normal mode state instead of resetting to defaults
     const restored = this.graphState.restoreNormalModeState();
