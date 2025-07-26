@@ -2,7 +2,7 @@ import { Component, ElementRef, HostListener, HostBinding, ViewChild, OnInit, On
 import { Observable, Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ActivatedRoute, Router } from '@angular/router';
-import { GraphNode } from '../../models/graph-node.model';
+import { GraphNode, NodeLabelStyle } from '../../models/graph-node.model';
 import { GraphEdge } from '../../models/graph-edge.model';
 import { GraphStateService } from '../../services/graph-state.service';
 import { ModeManagerService } from '../../services/mode-manager.service';
@@ -24,6 +24,8 @@ import { ConnectionPropertiesDialogComponent } from '../connection-properties-di
 import { ConnectionBulkEditDialogComponent } from '../connection-bulk-edit-dialog/connection-bulk-edit-dialog.component';
 import { NodeNameDialogComponent } from '../node-name-dialog/node-name-dialog.component';
 import { NodeBatchEditDialogComponent } from '../node-batch-edit-dialog/node-batch-edit-dialog.component';
+import { NodeLabelEditDialogComponent, NodeLabelEditResult } from '../node-label-edit-dialog/node-label-edit-dialog.component';
+import { NodeLabelBatchEditDialogComponent, NodeLabelBatchEditResult } from '../node-label-batch-edit-dialog/node-label-batch-edit-dialog.component';
 import { PinNameDialogComponent } from '../pin-name-dialog/pin-name-dialog.component';
 import { PinLayoutEditorComponent } from '../pin-layout-editor/pin-layout-editor.component';
 import { HandleComponent } from '../handle/handle';
@@ -61,6 +63,8 @@ interface LegacyPin {
     ConnectionBulkEditDialogComponent,
     NodeNameDialogComponent,
     NodeBatchEditDialogComponent,
+    NodeLabelEditDialogComponent,
+    NodeLabelBatchEditDialogComponent,
     PinNameDialogComponent,
     PinLayoutEditorComponent,
     HandleComponent,
@@ -158,6 +162,14 @@ export class GraphEditorComponent implements OnInit, OnDestroy, AfterViewInit {
   // Node batch edit dialog state
   showNodeBatchDialog = false;
   selectedNodesForBatchEdit: GraphNode[] = [];
+
+  // Node label edit dialog state
+  showNodeLabelDialog = false;
+  selectedNodeForLabelEdit: GraphNode | null = null;
+
+  // Node label batch edit dialog state
+  showNodeLabelBatchDialog = false;
+  selectedNodesForLabelBatchEdit: GraphNode[] = [];
 
   // Pin layout editor state
   showPinLayoutEditor = false;
@@ -282,7 +294,7 @@ export class GraphEditorComponent implements OnInit, OnDestroy, AfterViewInit {
     console.log('GraphEditor: Key pressed:', event.key, 'Current mode:', this.currentMode.name);
 
     // Skip mode switching if any dialog is open
-    if (this.showNodeDialog || this.showNodeBatchDialog || this.showPinDialog || this.showConnectionDialog || this.showConnectionBulkDialog || this.showPinLayoutEditor) {
+    if (this.showNodeDialog || this.showNodeBatchDialog || this.showNodeLabelDialog || this.showNodeLabelBatchDialog || this.showPinDialog || this.showConnectionDialog || this.showConnectionBulkDialog || this.showPinLayoutEditor) {
       console.log('Dialog is open, skipping mode switching for key:', event.key);
       return;
     }
@@ -333,7 +345,7 @@ export class GraphEditorComponent implements OnInit, OnDestroy, AfterViewInit {
     // Handle Enter key in pin edit mode - let the mode handle it via the PinStateService
     if (event.key === 'Enter' && this.currentMode?.name === 'pin-edit') {
       // Skip if any dialog is open
-      if (this.showNodeDialog || this.showNodeBatchDialog || this.showPinDialog || this.showConnectionDialog || this.showConnectionBulkDialog || this.showPinLayoutEditor) {
+      if (this.showNodeDialog || this.showNodeBatchDialog || this.showNodeLabelDialog || this.showNodeLabelBatchDialog || this.showPinDialog || this.showConnectionDialog || this.showConnectionBulkDialog || this.showPinLayoutEditor) {
         return;
       }
       // Let the mode handle the Enter key through PinStateService which has access to the actual selected pins
@@ -345,26 +357,26 @@ export class GraphEditorComponent implements OnInit, OnDestroy, AfterViewInit {
 
 
     
-    // Handle Enter key in normal mode for node name editing
+    // Handle Enter key in normal mode for node label editing
     if (event.key === 'Enter' && this.currentMode?.name === 'normal') {
       // Skip if any dialog is open
-      if (this.showNodeDialog || this.showNodeBatchDialog || this.showPinDialog || this.showConnectionDialog || this.showConnectionBulkDialog || this.showPinLayoutEditor) {
+      if (this.showNodeDialog || this.showNodeBatchDialog || this.showNodeLabelDialog || this.showNodeLabelBatchDialog || this.showPinDialog || this.showConnectionDialog || this.showConnectionBulkDialog || this.showPinLayoutEditor) {
         return;
       }
       if (this.selectedNodes.size === 1) {
-        // Edit the name of the single selected node
+        // Edit the label of the single selected node
         const nodeId = Array.from(this.selectedNodes)[0];
         const node = this.currentNodes.find(n => n.id === nodeId);
         if (node) {
-          this.openNodeNameDialog(node);
+          this.openNodeLabelDialog(node);
           event.preventDefault();
           return;
         }
       } else if (this.selectedNodes.size > 1) {
-        // Open batch edit dialog for multiple selected nodes
+        // Open batch label edit dialog for multiple selected nodes
         const nodes = this.currentNodes.filter(n => this.selectedNodes.has(n.id));
         if (nodes.length > 1) {
-          this.openNodeBatchEditDialog(nodes);
+          this.openNodeLabelBatchEditDialog(nodes);
           event.preventDefault();
           return;
         }
@@ -374,7 +386,7 @@ export class GraphEditorComponent implements OnInit, OnDestroy, AfterViewInit {
     // First, let the mode handle the event
     if (this.modeManager.handleKeyDown(event)) {
       // Skip mode-specific shortcuts if any dialog is open
-      if (this.showNodeDialog || this.showNodeBatchDialog || this.showPinDialog || this.showConnectionDialog || this.showConnectionBulkDialog || this.showPinLayoutEditor) {
+      if (this.showNodeDialog || this.showNodeBatchDialog || this.showNodeLabelDialog || this.showNodeLabelBatchDialog || this.showPinDialog || this.showConnectionDialog || this.showConnectionBulkDialog || this.showPinLayoutEditor) {
         return;
       }
       // Handle mode-specific shortcuts
@@ -398,7 +410,7 @@ export class GraphEditorComponent implements OnInit, OnDestroy, AfterViewInit {
     }
     if (event.key === 'Delete') {
       // Skip if any dialog is open
-      if (this.showNodeDialog || this.showNodeBatchDialog || this.showPinDialog || this.showConnectionDialog || this.showConnectionBulkDialog || this.showPinLayoutEditor) {
+      if (this.showNodeDialog || this.showNodeBatchDialog || this.showNodeLabelDialog || this.showNodeLabelBatchDialog || this.showPinDialog || this.showConnectionDialog || this.showConnectionBulkDialog || this.showPinLayoutEditor) {
         return;
       }
       // Only handle node deletion in Normal mode
@@ -1479,6 +1491,66 @@ export class GraphEditorComponent implements OnInit, OnDestroy, AfterViewInit {
     this.selectedNodesForBatchEdit = [];
   }
 
+  // Node label edit dialog methods
+  openNodeLabelDialog(node: GraphNode): void {
+    this.selectedNodeForLabelEdit = node;
+    this.showNodeLabelDialog = true;
+  }
+
+  onNodeLabelChanged(result: NodeLabelEditResult): void {
+    if (this.selectedNodeForLabelEdit) {
+      const updatedNode: GraphNode = {
+        ...this.selectedNodeForLabelEdit,
+        label: result.label,
+        labelPosition: result.labelPosition,
+        labelStyle: result.labelStyle
+      };
+      this.graphState.updateNode(this.selectedNodeForLabelEdit.id, updatedNode);
+    }
+    this.onNodeLabelDialogCancelled(); // Close the dialog
+  }
+
+  onNodeLabelDialogCancelled(): void {
+    this.showNodeLabelDialog = false;
+    this.selectedNodeForLabelEdit = null;
+  }
+
+  // Node label batch edit dialog methods
+  openNodeLabelBatchEditDialog(nodes: GraphNode[]): void {
+    this.selectedNodesForLabelBatchEdit = nodes;
+    this.showNodeLabelBatchDialog = true;
+  }
+
+  onNodeLabelsBatchChanged(changes: NodeLabelBatchEditResult[]): void {
+    // Apply changes to each node
+    changes.forEach(change => {
+      const node = this.currentNodes.find(n => n.id === change.nodeId);
+      if (node) {
+        const updatedNode: GraphNode = { ...node };
+        
+        if (change.label !== undefined) {
+          updatedNode.label = change.label;
+        }
+        
+        if (change.labelPosition !== undefined) {
+          updatedNode.labelPosition = change.labelPosition;
+        }
+        
+        if (change.labelStyle !== undefined) {
+          updatedNode.labelStyle = change.labelStyle;
+        }
+        
+        this.graphState.updateNode(node.id, updatedNode);
+      }
+    });
+    this.onNodeLabelBatchDialogCancelled(); // Close the dialog
+  }
+
+  onNodeLabelBatchDialogCancelled(): void {
+    this.showNodeLabelBatchDialog = false;
+    this.selectedNodesForLabelBatchEdit = [];
+  }
+
   // File operations
   saveGraph(): void {
     const fileMode = this.modeManager.getAvailableModes().find(mode => mode.name === 'file') as FileMode;
@@ -1577,5 +1649,83 @@ export class GraphEditorComponent implements OnInit, OnDestroy, AfterViewInit {
   getActiveCanvasBoundingRect(): DOMRect | null {
     const activeCanvasElement = this.getActiveCanvasElement();
     return activeCanvasElement?.getBoundingClientRect() || null;
+  }
+
+  // Label positioning and styling helper methods
+  calculateLabelPosition(node: GraphNode): { x: number; y: number } {
+    const centerX = node.x + node.width / 2;
+    const centerY = node.y + node.height / 2;
+    
+    const position = node.labelPosition;
+    const offsetX = position?.offsetX || 0;
+    const offsetY = position?.offsetY || 0;
+    
+    return {
+      x: centerX + offsetX,
+      y: centerY + offsetY
+    };
+  }
+
+  getLabelStyle(node: GraphNode): NodeLabelStyle {
+    // Return default style merged with node's custom style
+    const defaultStyle: NodeLabelStyle = {
+      fontSize: 12,
+      fontFamily: 'Arial, sans-serif',
+      fontWeight: 'bold',
+      color: '#333333',
+      alignment: 'middle',
+      verticalAlignment: 'middle',
+      wrap: false
+    };
+    
+    return { ...defaultStyle, ...node.labelStyle };
+  }
+
+  getTextAnchor(alignment: 'start' | 'middle' | 'end'): string {
+    return alignment;
+  }
+
+  getDominantBaseline(verticalAlignment: 'top' | 'middle' | 'bottom'): string {
+    switch (verticalAlignment) {
+      case 'top': return 'text-before-edge';
+      case 'middle': return 'central';
+      case 'bottom': return 'text-after-edge';
+      default: return 'central';
+    }
+  }
+
+  // Method to handle text wrapping
+  wrapText(text: string, maxWidth: number, fontSize: number, fontFamily: string): string[] {
+    if (!maxWidth) return [text];
+    
+    // Simple word wrapping - in a real implementation you might want to use canvas measureText
+    const words = text.split(' ');
+    const lines: string[] = [];
+    let currentLine = '';
+    
+    // Rough character width estimation (this is simplified)
+    const avgCharWidth = fontSize * 0.6;
+    const maxCharsPerLine = Math.floor(maxWidth / avgCharWidth);
+    
+    for (const word of words) {
+      const testLine = currentLine ? currentLine + ' ' + word : word;
+      if (testLine.length <= maxCharsPerLine) {
+        currentLine = testLine;
+      } else {
+        if (currentLine) {
+          lines.push(currentLine);
+          currentLine = word;
+        } else {
+          // Word too long, break it
+          lines.push(word);
+        }
+      }
+    }
+    
+    if (currentLine) {
+      lines.push(currentLine);
+    }
+    
+    return lines;
   }
 }
