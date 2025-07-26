@@ -114,7 +114,12 @@ export class GraphEditorComponent implements OnInit, OnDestroy, AfterViewInit {
   hoveredPin: { nodeId: string; pinName: string } | null = null;
   
   // Central reference area for pin interactions
-  private centralReferenceArea = { x: 0, y: 0, width: 0, height: 0 };
+  private _centralReferenceArea = { x: 0, y: 0, width: 0, height: 0 };
+  
+  // Public getter for template bindings to avoid repeated method calls
+  get centralReferenceArea(): { x: number; y: number; width: number; height: number } {
+    return this._centralReferenceArea;
+  }
   
   // Mode system
   public currentMode!: GraphMode;
@@ -239,6 +244,8 @@ export class GraphEditorComponent implements OnInit, OnDestroy, AfterViewInit {
     this.modeSubscription = this.modeManager.activeMode$.subscribe(mode => {
       if (mode) {
         this.currentMode = mode;
+        // Update central reference area when mode changes (especially when switching between normal and feature-flag canvases)
+        this.updateCentralReferenceArea();
       }
       // Remove pin-edit overlays when exiting pin-edit mode
       if (mode?.name !== 'pin-edit') {
@@ -260,6 +267,9 @@ export class GraphEditorComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   ngAfterViewInit(): void {
+    // Update the central reference area after view initialization
+    this.updateCentralReferenceArea();
+    
     // Render initial overlay if needed using the active canvas
     const activeCanvasElement = this.getActiveCanvasElement();
     if (this.currentMode && activeCanvasElement) {
@@ -404,6 +414,12 @@ export class GraphEditorComponent implements OnInit, OnDestroy, AfterViewInit {
     if (event.key === 'Control' || event.key === 'Meta') {
       this.isCtrlPressed = false;
     }
+  }
+
+  @HostListener('window:resize')
+  onWindowResize(): void {
+    // Update central reference area when window is resized
+    this.updateCentralReferenceArea();
   }
 
   addNode(type: string): void {
@@ -1227,23 +1243,28 @@ export class GraphEditorComponent implements OnInit, OnDestroy, AfterViewInit {
 
   // Central reference area methods
   getCentralReferenceArea(): { x: number; y: number; width: number; height: number } {
+    this.updateCentralReferenceArea();
+    return this._centralReferenceArea;
+  }
+
+  // Update the central reference area when canvas dimensions change
+  private updateCentralReferenceArea(): void {
     const svgRect = this.getActiveCanvasBoundingRect();
     if (!svgRect) {
-      return { x: 0, y: 0, width: 0, height: 0 };
+      this._centralReferenceArea = { x: 0, y: 0, width: 0, height: 0 };
+      return;
     }
 
     // Create a rectangle covering the entire workspace for pin reference
     const width = svgRect.width;
     const height = svgRect.height;
     
-    this.centralReferenceArea = {
+    this._centralReferenceArea = {
       x: 0,
       y: 0,
       width: width,
       height: height
     };
-    
-    return this.centralReferenceArea;
   }
 
   onCentralReferenceMouseDown(event: MouseEvent): void {
