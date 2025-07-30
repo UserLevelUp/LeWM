@@ -1,0 +1,315 @@
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { FormsModule } from '@angular/forms';
+import { By } from '@angular/platform-browser';
+import { NodeLabelEditDialogComponent, NodeLabelEditResult } from './node-label-edit-dialog.component';
+import { GraphNode } from '../../models/graph-node.model';
+
+describe('NodeLabelEditDialogComponent', () => {
+  let component: NodeLabelEditDialogComponent;
+  let fixture: ComponentFixture<NodeLabelEditDialogComponent>;
+  let testNode: GraphNode;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [FormsModule, NodeLabelEditDialogComponent]
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(NodeLabelEditDialogComponent);
+    component = fixture.componentInstance;
+    
+    testNode = {
+      id: 'test-node',
+      type: 'basic',
+      x: 100,
+      y: 100,
+      width: 80,
+      height: 60,
+      label: 'Test Node'
+    };
+    
+    fixture.detectChanges();
+  });
+
+  it('should create', () => {
+    expect(component).toBeTruthy();
+  });
+
+  it('should load node data when shown', () => {
+    component.show(testNode);
+    
+    expect(component.labelText).toBe('Test Node');
+    expect(component.offsetX).toBe(0);
+    expect(component.offsetY).toBe(0);
+    expect(component.alignment).toBe('middle');
+    expect(component.verticalAlignment).toBe('middle');
+    expect(component.fontSize).toBe(12);
+    expect(component.fontWeight).toBe('bold');
+    expect(component.fontFamily).toBe('Arial, sans-serif');
+    expect(component.color).toBe('#333333');
+    expect(component.labelWrap).toBe(false);
+    expect(component.isVisible).toBe(true);
+  });
+
+  it('should load custom label style from node', () => {
+    const nodeWithStyle: GraphNode = {
+      ...testNode,
+      labelStyle: {
+        fontSize: 16,
+        fontFamily: 'Helvetica, sans-serif',
+        fontWeight: 'normal',
+        color: '#ff0000',
+        alignment: 'start',
+        verticalAlignment: 'top',
+        wrap: true,
+        maxWidth: 150
+      }
+    };
+
+    component.show(nodeWithStyle);
+
+    expect(component.fontSize).toBe(16);
+    expect(component.fontFamily).toBe('Helvetica, sans-serif');
+    expect(component.fontWeight).toBe('normal');
+    expect(component.color).toBe('#ff0000');
+    expect(component.alignment).toBe('start');
+    expect(component.verticalAlignment).toBe('top');
+    expect(component.labelWrap).toBe(true);
+    expect(component.maxWidth).toBe(150);
+  });
+
+  it('should load custom label position from node', () => {
+    const nodeWithPosition: GraphNode = {
+      ...testNode,
+      labelPosition: {
+        offsetX: 10,
+        offsetY: -5
+      }
+    };
+
+    component.show(nodeWithPosition);
+
+    expect(component.offsetX).toBe(10);
+    expect(component.offsetY).toBe(-5);
+  });
+
+  it('should emit labelChanged when OK is clicked', () => {
+    spyOn(component.labelChanged, 'emit');
+    
+    component.show(testNode);
+    component.labelText = 'Updated Label';
+    component.offsetX = 5;
+    component.offsetY = -10;
+    component.alignment = 'end';
+    component.fontSize = 14;
+    component.color = '#0000ff';
+    
+    component.onOk();
+
+    expect(component.labelChanged.emit).toHaveBeenCalledWith({
+      label: 'Updated Label',
+      labelPosition: { offsetX: 5, offsetY: -10 },
+      labelStyle: {
+        fontSize: 14,
+        fontFamily: 'Arial, sans-serif',
+        fontWeight: 'bold',
+        color: '#0000ff',
+        alignment: 'end',
+        verticalAlignment: 'middle',
+        wrap: false,
+        maxWidth: undefined
+      }
+    } as NodeLabelEditResult);
+  });
+
+  it('should not emit when label text is empty', () => {
+    spyOn(component.labelChanged, 'emit');
+    
+    component.show(testNode);
+    component.labelText = '';
+    
+    component.onOk();
+
+    expect(component.labelChanged.emit).not.toHaveBeenCalled();
+  });
+
+  it('should emit cancelled when cancel is clicked', () => {
+    spyOn(component.cancelled, 'emit');
+    
+    component.onCancel();
+
+    expect(component.cancelled.emit).toHaveBeenCalled();
+    expect(component.isVisible).toBe(false);
+  });
+
+  it('should reset to defaults when reset is clicked', () => {
+    component.show(testNode);
+    component.labelText = 'Modified';
+    component.offsetX = 20;
+    component.fontSize = 18;
+    component.labelWrap = true;
+    
+    component.onReset();
+
+    expect(component.labelText).toBe('');
+    expect(component.offsetX).toBe(0);
+    expect(component.offsetY).toBe(0);
+    expect(component.fontSize).toBe(12);
+    expect(component.labelWrap).toBe(false);
+  });
+
+  it('should handle keyboard events', () => {
+    spyOn(component, 'onOk');
+    spyOn(component, 'onCancel');
+    
+    const enterEvent = new KeyboardEvent('keydown', { key: 'Enter' });
+    const escapeEvent = new KeyboardEvent('keydown', { key: 'Escape' });
+    
+    component.onKeyDown(enterEvent);
+    expect(component.onOk).toHaveBeenCalled();
+    
+    component.onKeyDown(escapeEvent);
+    expect(component.onCancel).toHaveBeenCalled();
+  });
+
+  it('should handle input-level escape key', () => {
+    spyOn(component, 'onCancel');
+    
+    const escapeEvent = new KeyboardEvent('keydown', { key: 'Escape' });
+    
+    component.onKeyDown(escapeEvent);
+    expect(component.onCancel).toHaveBeenCalled();
+  });
+
+  it('should handle dialog-level escape key', () => {
+    spyOn(component, 'onCancel');
+    
+    const escapeEvent = new KeyboardEvent('keydown', { key: 'Escape' });
+    
+    component.onDialogKeyDown(escapeEvent);
+    expect(component.onCancel).toHaveBeenCalled();
+  });
+
+  it('should close dialog when escape is pressed in the input field', () => {
+    spyOn(component.cancelled, 'emit');
+    
+    component.show(testNode);
+    expect(component.isVisible).toBe(true);
+    
+    // Simulate escape key being pressed in the input field
+    const escapeEvent = new KeyboardEvent('keydown', { key: 'Escape' });
+    component.onKeyDown(escapeEvent);
+    
+    expect(component.cancelled.emit).toHaveBeenCalled();
+    expect(component.isVisible).toBe(false);
+  });
+
+  it('should close dialog when escape is pressed anywhere in the dialog', () => {
+    spyOn(component.cancelled, 'emit');
+    
+    component.show(testNode);
+    expect(component.isVisible).toBe(true);
+    
+    // Simulate escape key being pressed in the dialog container
+    const escapeEvent = new KeyboardEvent('keydown', { key: 'Escape' });
+    component.onDialogKeyDown(escapeEvent);
+    
+    expect(component.cancelled.emit).toHaveBeenCalled();
+    expect(component.isVisible).toBe(false);
+  });
+
+  it('should close dialog when close button is clicked', () => {
+    spyOn(component, 'onCancel');
+    
+    component.show(testNode);
+    fixture.detectChanges(); // Ensure the template is updated
+    expect(component.isVisible).toBe(true);
+    
+    // The close button calls onCancel() directly, so we just test that method
+    const closeButton = fixture.debugElement.query(By.css('.close-btn'));
+    expect(closeButton).toBeTruthy();
+    
+    closeButton.nativeElement.click();
+    expect(component.onCancel).toHaveBeenCalled();
+  });
+
+  it('should load node data when node input changes', () => {
+    // Start with no node
+    expect(component.labelText).toBe('');
+    
+    // Set a node through input binding (simulating how the graph editor uses it)
+    const nodeWithLabel: GraphNode = {
+      id: 'lm386-node',
+      type: 'ic-chip', 
+      x: 200,
+      y: 150,
+      width: 80,
+      height: 60,
+      label: 'LM386'
+    };
+    
+    component.node = nodeWithLabel;
+    
+    // Trigger ngOnChanges manually (simulating Angular's change detection)
+    component.ngOnChanges({
+      node: {
+        currentValue: nodeWithLabel,
+        previousValue: null,
+        firstChange: true,
+        isFirstChange: () => true
+      }
+    });
+    
+    // Should now display the node's label text
+    expect(component.labelText).toBe('LM386');
+    expect(component.isVisible).toBe(false); // Dialog should still be hidden until explicitly shown
+  });
+
+  it('should update label text when node input changes to different node', () => {
+    // Start with first node
+    const firstNode: GraphNode = {
+      id: 'first-node',
+      type: 'basic',
+      x: 100,
+      y: 100,
+      width: 80,
+      height: 60,
+      label: 'First Node'
+    };
+    
+    component.node = firstNode;
+    component.ngOnChanges({
+      node: {
+        currentValue: firstNode,
+        previousValue: null,
+        firstChange: true,
+        isFirstChange: () => true
+      }
+    });
+    
+    expect(component.labelText).toBe('First Node');
+    
+    // Change to second node
+    const secondNode: GraphNode = {
+      id: 'second-node',
+      type: 'basic',
+      x: 200,
+      y: 200,
+      width: 80,
+      height: 60,
+      label: 'LM386'
+    };
+    
+    component.node = secondNode;
+    component.ngOnChanges({
+      node: {
+        currentValue: secondNode,
+        previousValue: firstNode,
+        firstChange: false,
+        isFirstChange: () => false
+      }
+    });
+    
+    // Should now show the second node's label
+    expect(component.labelText).toBe('LM386');
+  });
+});

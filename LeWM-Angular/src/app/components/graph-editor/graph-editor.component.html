@@ -204,13 +204,37 @@
               stroke="#333" 
               stroke-width="2"
               class="graph-node-body" />
-        <text [attr.x]="node.x + node.width/2" 
-              [attr.y]="node.y + node.height/2 + 5" 
-              text-anchor="middle" 
-              font-size="12" 
-              font-weight="bold">
-          {{ node.label }}
-        </text>
+        <!-- Node Label with custom positioning and styling -->
+        <g class="node-label-group">
+          <text *ngIf="!getLabelStyle(node).wrap"
+                [attr.x]="calculateLabelPosition(node).x" 
+                [attr.y]="calculateLabelPosition(node).y" 
+                [attr.text-anchor]="getTextAnchor(getLabelStyle(node).alignment)" 
+                [attr.dominant-baseline]="getDominantBaseline(getLabelStyle(node).verticalAlignment)"
+                [attr.font-size]="getLabelStyle(node).fontSize" 
+                [attr.font-weight]="getLabelStyle(node).fontWeight"
+                [attr.font-family]="getLabelStyle(node).fontFamily"
+                [attr.fill]="getLabelStyle(node).color"
+                class="node-label">
+            {{ node.label }}
+          </text>
+          
+          <!-- Wrapped text for multi-line labels -->
+          <g *ngIf="getLabelStyle(node).wrap" class="wrapped-label">
+            <text *ngFor="let line of wrapText(node.label, getLabelStyle(node).maxWidth || 100, getLabelStyle(node).fontSize, getLabelStyle(node).fontFamily); let i = index"
+                  [attr.x]="calculateLabelPosition(node).x" 
+                  [attr.y]="calculateLabelPosition(node).y + (i * getLabelStyle(node).fontSize * 1.2)" 
+                  [attr.text-anchor]="getTextAnchor(getLabelStyle(node).alignment)" 
+                  [attr.dominant-baseline]="getDominantBaseline(getLabelStyle(node).verticalAlignment)"
+                  [attr.font-size]="getLabelStyle(node).fontSize" 
+                  [attr.font-weight]="getLabelStyle(node).fontWeight"
+                  [attr.font-family]="getLabelStyle(node).fontFamily"
+                  [attr.fill]="getLabelStyle(node).color"
+                  class="node-label wrapped-line">
+              {{ line }}
+            </text>
+          </g>
+        </g>
         
         <!-- Connection Pins (Hybrid System) -->
         <g *ngIf="node.pins" class="pins legacy-pins">
@@ -488,6 +512,24 @@
     (nodesUpdated)="onNodesBatchUpdated($event)"
     (cancelled)="onNodeBatchDialogCancelled()">
   </app-node-batch-edit-dialog>
+
+  <!-- Node Label Edit Dialog -->
+  <app-node-label-edit-dialog
+    #nodeLabelDialog
+    [isVisible]="showNodeLabelDialog"
+    [node]="selectedNodeForLabelEdit"
+    (labelChanged)="onNodeLabelChanged($event)"
+    (cancelled)="onNodeLabelDialogCancelled()">
+  </app-node-label-edit-dialog>
+
+  <!-- Node Label Batch Edit Dialog -->
+  <app-node-label-batch-edit-dialog
+    #nodeLabelBatchDialog
+    [isVisible]="showNodeLabelBatchDialog"
+    [nodes]="selectedNodesForLabelBatchEdit"
+    (labelChanges)="onNodeLabelsBatchChanged($event)"
+    (cancelled)="onNodeLabelBatchDialogCancelled()">
+  </app-node-label-batch-edit-dialog>
 
   <!-- Connection Properties Dialog -->
   <app-connection-properties-dialog
