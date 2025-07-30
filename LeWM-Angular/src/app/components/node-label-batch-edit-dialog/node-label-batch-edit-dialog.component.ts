@@ -15,7 +15,7 @@ export interface NodeLabelBatchEditResult {
   standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
-    <div class="batch-label-dialog-overlay" *ngIf="isVisible" (click)="onOverlayClick()" tabindex="0">
+    <div class="batch-label-dialog-overlay" *ngIf="isVisible" (click)="onOverlayClick()">
       <div class="batch-label-dialog" (click)="$event.stopPropagation()" (keydown)="onDialogKeyDown($event)" tabindex="0">
         <div class="batch-label-dialog-header">
           <h4>Edit Labels for {{ nodes.length }} Nodes</h4>

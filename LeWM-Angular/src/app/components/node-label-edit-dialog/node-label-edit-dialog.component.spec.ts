@@ -170,24 +170,24 @@ describe('NodeLabelEditDialogComponent', () => {
     expect(component.onCancel).toHaveBeenCalled();
   });
 
-  it('should handle dialog-level escape key', () => {
+  it('should handle input-level escape key', () => {
     spyOn(component, 'onCancel');
     
     const escapeEvent = new KeyboardEvent('keydown', { key: 'Escape' });
     
-    component.onDialogKeyDown(escapeEvent);
+    component.onKeyDown(escapeEvent);
     expect(component.onCancel).toHaveBeenCalled();
   });
 
-  it('should close dialog when escape is pressed anywhere in the dialog', () => {
+  it('should close dialog when escape is pressed in the input field', () => {
     spyOn(component.cancelled, 'emit');
     
     component.show(testNode);
     expect(component.isVisible).toBe(true);
     
-    // Simulate escape key being pressed in the dialog container
+    // Simulate escape key being pressed in the input field
     const escapeEvent = new KeyboardEvent('keydown', { key: 'Escape' });
-    component.onDialogKeyDown(escapeEvent);
+    component.onKeyDown(escapeEvent);
     
     expect(component.cancelled.emit).toHaveBeenCalled();
     expect(component.isVisible).toBe(false);

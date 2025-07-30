@@ -14,8 +14,8 @@ export interface NodeLabelEditResult {
   standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
-    <div class="label-dialog-overlay" *ngIf="isVisible" (click)="onOverlayClick()" tabindex="0">
-      <div class="label-dialog" (click)="$event.stopPropagation()" (keydown)="onDialogKeyDown($event)" tabindex="0">
+    <div class="label-dialog-overlay" *ngIf="isVisible" (click)="onOverlayClick()">
+      <div class="label-dialog" (click)="$event.stopPropagation()">
         <div class="label-dialog-header">
           <h4>Edit Node Label</h4>
         </div>
@@ -466,13 +466,6 @@ export class NodeLabelEditDialogComponent implements OnInit, OnChanges {
     }
   }
 
-  onDialogKeyDown(event: KeyboardEvent): void {
-    if (event.key === 'Escape') {
-      event.preventDefault();
-      this.onCancel();
-    }
-  }
-
   reset(): void {
     this.labelText = '';
     this.labelWrap = false;
@@ -503,14 +496,9 @@ export class NodeLabelEditDialogComponent implements OnInit, OnChanges {
     this.isVisible = true;
     this.errorMessage = '';
     
-    // Focus the dialog container to ensure keyboard events work
+    // Focus and select the input for user convenience
+    // The input already has a keydown handler that processes Escape key
     setTimeout(() => {
-      const dialog = document.querySelector('.label-dialog') as HTMLElement;
-      if (dialog) {
-        dialog.focus();
-      }
-      
-      // Then focus and select the input for user convenience
       const input = document.getElementById('labelText') as HTMLTextAreaElement;
       if (input) {
         input.focus();
