@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output, OnInit, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, Input, Output, OnInit, OnChanges, SimpleChanges, ViewChild, ElementRef, AfterViewInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { GraphNode, NodeLabelStyle, NodeLabelPosition } from '../../models/graph-node.model';
@@ -14,8 +14,8 @@ export interface NodeLabelEditResult {
   standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
-    <div class="label-dialog-overlay" *ngIf="isVisible" (click)="onOverlayClick()">
-      <div class="label-dialog" (click)="$event.stopPropagation()" (keydown)="onDialogKeyDown($event)" tabindex="0">
+    <div class="label-dialog-overlay" *ngIf="isVisible" (click)="onOverlayClick()" (keydown)="onOverlayKeyDown($event)">
+      <div #dialogElement class="label-dialog" (click)="$event.stopPropagation()" (keydown)="onDialogKeyDown($event)" tabindex="0">
         <div class="label-dialog-header">
           <h4>Edit Node Label</h4>
           <button class="close-btn" (click)="onCancel()" title="Close dialog">×</button>
@@ -355,11 +355,13 @@ export interface NodeLabelEditResult {
     }
   `]
 })
-export class NodeLabelEditDialogComponent implements OnInit, OnChanges {
+export class NodeLabelEditDialogComponent implements OnInit, OnChanges, AfterViewInit {
   @Input() isVisible = false;
   @Input() node: GraphNode | null = null;
   @Output() labelChanged = new EventEmitter<NodeLabelEditResult>();
   @Output() cancelled = new EventEmitter<void>();
+  @ViewChild('dialogElement', { read: ElementRef }) dialogElement?: ElementRef;
+  @ViewChild('labelInput', { read: ElementRef }) labelInput?: ElementRef;
 
   // Form fields
   labelText = '';
@@ -390,6 +392,8 @@ export class NodeLabelEditDialogComponent implements OnInit, OnChanges {
     maxWidth: 100
   };
 
+  constructor(private cdr: ChangeDetectorRef) {}
+
   ngOnInit(): void {
     this.loadNodeData();
   }
@@ -397,6 +401,20 @@ export class NodeLabelEditDialogComponent implements OnInit, OnChanges {
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['node'] && this.node) {
       this.loadNodeData();
+    }
+    
+    // Check if dialog just became visible
+    if (changes['isVisible'] && this.isVisible && !changes['isVisible'].previousValue) {
+      // Ensure view is updated first
+      this.cdr.detectChanges();
+      this.focusDialog();
+    }
+  }
+
+  ngAfterViewInit(): void {
+    // Focus management when dialog becomes visible
+    if (this.isVisible && this.dialogElement) {
+      this.focusDialog();
     }
   }
 
@@ -484,9 +502,18 @@ export class NodeLabelEditDialogComponent implements OnInit, OnChanges {
     }
   }
 
+  onOverlayKeyDown(event: KeyboardEvent): void {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      event.stopPropagation();
+      this.onCancel();
+    }
+  }
+
   onDialogKeyDown(event: KeyboardEvent): void {
     if (event.key === 'Escape') {
       event.preventDefault();
+      event.stopPropagation();
       this.onCancel();
     }
   }
@@ -520,19 +547,15 @@ export class NodeLabelEditDialogComponent implements OnInit, OnChanges {
     this.loadNodeData();
     this.isVisible = true;
     this.errorMessage = '';
-    
-    // Focus the dialog and then the input for user convenience
-    setTimeout(() => {
-      const dialog = document.querySelector('.label-dialog') as HTMLElement;
-      if (dialog) {
-        dialog.focus();
-      }
-      
-      const input = document.getElementById('labelText') as HTMLTextAreaElement;
-      if (input) {
-        input.focus();
-        input.select(); // Select the current text for easy editing
-      }
-    }, 100);
+  }
+
+  private focusDialog(): void {
+    if (this.dialogElement?.nativeElement) {
+      this.dialogElement.nativeElement.focus();
+    }
+    if (this.labelInput?.nativeElement) {
+      this.labelInput.nativeElement.focus();
+      this.labelInput.nativeElement.select();
+    }
   }
 }

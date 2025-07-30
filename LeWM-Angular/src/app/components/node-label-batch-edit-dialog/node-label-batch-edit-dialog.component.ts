@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output, OnInit } from '@angular/core';
+import { Component, EventEmitter, Input, Output, OnInit, OnChanges, SimpleChanges, ViewChild, ElementRef, AfterViewInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { GraphNode, NodeLabelStyle, NodeLabelPosition } from '../../models/graph-node.model';
@@ -15,8 +15,8 @@ export interface NodeLabelBatchEditResult {
   standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
-    <div class="batch-label-dialog-overlay" *ngIf="isVisible" (click)="onOverlayClick()">
-      <div class="batch-label-dialog" (click)="$event.stopPropagation()" (keydown)="onDialogKeyDown($event)" tabindex="0">
+    <div class="batch-label-dialog-overlay" *ngIf="isVisible" (click)="onOverlayClick()" (keydown)="onOverlayKeyDown($event)">
+      <div #dialogElement class="batch-label-dialog" (click)="$event.stopPropagation()" (keydown)="onDialogKeyDown($event)" tabindex="0">
         <div class="batch-label-dialog-header">
           <h4>Edit Labels for {{ nodes.length }} Nodes</h4>
           <button class="close-btn" (click)="onCancel()" title="Close dialog">×</button>
@@ -385,11 +385,12 @@ export interface NodeLabelBatchEditResult {
     }
   `]
 })
-export class NodeLabelBatchEditDialogComponent implements OnInit {
+export class NodeLabelBatchEditDialogComponent implements OnInit, OnChanges, AfterViewInit {
   @Input() isVisible = false;
   @Input() nodes: GraphNode[] = [];
   @Output() labelChanges = new EventEmitter<NodeLabelBatchEditResult[]>();
   @Output() cancelled = new EventEmitter<void>();
+  @ViewChild('dialogElement', { read: ElementRef }) dialogElement?: ElementRef;
 
   // Global controls
   applyPosition = false;
@@ -413,8 +414,30 @@ export class NodeLabelBatchEditDialogComponent implements OnInit {
 
   errorMessage = '';
 
+  constructor(private cdr: ChangeDetectorRef) {}
+
   ngOnInit(): void {
     this.initializeNodeData();
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['nodes'] && this.nodes.length > 0) {
+      this.initializeNodeData();
+    }
+    
+    // Check if dialog just became visible
+    if (changes['isVisible'] && this.isVisible && !changes['isVisible'].previousValue) {
+      // Ensure view is updated first
+      this.cdr.detectChanges();
+      this.focusDialog();
+    }
+  }
+
+  ngAfterViewInit(): void {
+    // Focus management when dialog becomes visible
+    if (this.isVisible && this.dialogElement) {
+      this.focusDialog();
+    }
   }
 
   private initializeNodeData(): void {
@@ -524,9 +547,18 @@ export class NodeLabelBatchEditDialogComponent implements OnInit {
     this.onCancel();
   }
 
+  onOverlayKeyDown(event: KeyboardEvent): void {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      event.stopPropagation();
+      this.onCancel();
+    }
+  }
+
   onDialogKeyDown(event: KeyboardEvent): void {
     if (event.key === 'Escape') {
       event.preventDefault();
+      event.stopPropagation();
       this.onCancel();
     }
   }
@@ -564,12 +596,14 @@ export class NodeLabelBatchEditDialogComponent implements OnInit {
     this.isVisible = true;
     this.errorMessage = '';
     
-    // Focus the dialog container to ensure keyboard events work
-    setTimeout(() => {
-      const dialog = document.querySelector('.batch-label-dialog') as HTMLElement;
-      if (dialog) {
-        dialog.focus();
-      }
-    }, 100);
+    // Use change detection and focus method instead of setTimeout
+    this.cdr.detectChanges();
+    this.focusDialog();
+  }
+
+  private focusDialog(): void {
+    if (this.dialogElement?.nativeElement) {
+      this.dialogElement.nativeElement.focus();
+    }
   }
 }
