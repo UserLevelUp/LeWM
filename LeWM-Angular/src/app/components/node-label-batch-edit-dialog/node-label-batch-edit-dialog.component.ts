@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output, OnInit, OnChanges, SimpleChanges, ViewChild, ElementRef, AfterViewInit, ChangeDetectorRef } from '@angular/core';
+import { Component, EventEmitter, Input, Output, OnInit, OnChanges, SimpleChanges, ViewChild, ElementRef, AfterViewInit, ChangeDetectorRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { GraphNode, NodeLabelStyle, NodeLabelPosition } from '../../models/graph-node.model';
@@ -15,7 +15,7 @@ export interface NodeLabelBatchEditResult {
   standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
-    <div class="batch-label-dialog-overlay" *ngIf="isVisible" (click)="onOverlayClick()" (keydown)="onOverlayKeyDown($event)">
+    <div class="batch-label-dialog-overlay" *ngIf="isVisible" (click)="onOverlayClick()" (keydown)="onOverlayKeyDown($event)" tabindex="0">
       <div #dialogElement class="batch-label-dialog" (click)="$event.stopPropagation()" (keydown)="onDialogKeyDown($event)" tabindex="0">
         <div class="batch-label-dialog-header">
           <h4>Edit Labels for {{ nodes.length }} Nodes</h4>
@@ -414,7 +414,7 @@ export class NodeLabelBatchEditDialogComponent implements OnInit, OnChanges, Aft
 
   errorMessage = '';
 
-  constructor(private cdr: ChangeDetectorRef) {}
+  private cdr = inject(ChangeDetectorRef);
 
   ngOnInit(): void {
     this.initializeNodeData();

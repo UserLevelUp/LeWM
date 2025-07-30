@@ -1695,7 +1695,7 @@ export class GraphEditorComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   // Method to handle text wrapping
-  wrapText(text: string, maxWidth: number, fontSize: number, fontFamily: string): string[] {
+  wrapText(text: string, maxWidth: number, fontSize: number, _fontFamily: string): string[] {
     if (!maxWidth) return [text];
     
     // Simple word wrapping - in a real implementation you might want to use canvas measureText

@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output, OnInit, OnChanges, SimpleChanges, ViewChild, ElementRef, AfterViewInit, ChangeDetectorRef } from '@angular/core';
+import { Component, EventEmitter, Input, Output, OnInit, OnChanges, SimpleChanges, ViewChild, ElementRef, AfterViewInit, ChangeDetectorRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { GraphNode, NodeLabelStyle, NodeLabelPosition } from '../../models/graph-node.model';
@@ -14,7 +14,7 @@ export interface NodeLabelEditResult {
   standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
-    <div class="label-dialog-overlay" *ngIf="isVisible" (click)="onOverlayClick()" (keydown)="onOverlayKeyDown($event)">
+    <div class="label-dialog-overlay" *ngIf="isVisible" (click)="onOverlayClick()" (keydown)="onOverlayKeyDown($event)" tabindex="0">
       <div #dialogElement class="label-dialog" (click)="$event.stopPropagation()" (keydown)="onDialogKeyDown($event)" tabindex="0">
         <div class="label-dialog-header">
           <h4>Edit Node Label</h4>
@@ -392,7 +392,7 @@ export class NodeLabelEditDialogComponent implements OnInit, OnChanges, AfterVie
     maxWidth: 100
   };
 
-  constructor(private cdr: ChangeDetectorRef) {}
+  private cdr = inject(ChangeDetectorRef);
 
   ngOnInit(): void {
     this.loadNodeData();
