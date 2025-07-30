@@ -169,4 +169,85 @@ describe('NodeLabelEditDialogComponent', () => {
     component.onKeyDown(escapeEvent);
     expect(component.onCancel).toHaveBeenCalled();
   });
+
+  it('should load node data when node input changes', () => {
+    // Start with no node
+    expect(component.labelText).toBe('');
+    
+    // Set a node through input binding (simulating how the graph editor uses it)
+    const nodeWithLabel: GraphNode = {
+      id: 'lm386-node',
+      type: 'ic-chip', 
+      x: 200,
+      y: 150,
+      width: 80,
+      height: 60,
+      label: 'LM386'
+    };
+    
+    component.node = nodeWithLabel;
+    
+    // Trigger ngOnChanges manually (simulating Angular's change detection)
+    component.ngOnChanges({
+      node: {
+        currentValue: nodeWithLabel,
+        previousValue: null,
+        firstChange: true,
+        isFirstChange: () => true
+      }
+    });
+    
+    // Should now display the node's label text
+    expect(component.labelText).toBe('LM386');
+    expect(component.isVisible).toBe(false); // Dialog should still be hidden until explicitly shown
+  });
+
+  it('should update label text when node input changes to different node', () => {
+    // Start with first node
+    const firstNode: GraphNode = {
+      id: 'first-node',
+      type: 'basic',
+      x: 100,
+      y: 100,
+      width: 80,
+      height: 60,
+      label: 'First Node'
+    };
+    
+    component.node = firstNode;
+    component.ngOnChanges({
+      node: {
+        currentValue: firstNode,
+        previousValue: null,
+        firstChange: true,
+        isFirstChange: () => true
+      }
+    });
+    
+    expect(component.labelText).toBe('First Node');
+    
+    // Change to second node
+    const secondNode: GraphNode = {
+      id: 'second-node',
+      type: 'basic',
+      x: 200,
+      y: 200,
+      width: 80,
+      height: 60,
+      label: 'LM386'
+    };
+    
+    component.node = secondNode;
+    component.ngOnChanges({
+      node: {
+        currentValue: secondNode,
+        previousValue: firstNode,
+        firstChange: false,
+        isFirstChange: () => false
+      }
+    });
+    
+    // Should now show the second node's label
+    expect(component.labelText).toBe('LM386');
+  });
 });

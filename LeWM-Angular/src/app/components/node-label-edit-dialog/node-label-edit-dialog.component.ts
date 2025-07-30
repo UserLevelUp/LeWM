@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output, OnInit } from '@angular/core';
+import { Component, EventEmitter, Input, Output, OnInit, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { GraphNode, NodeLabelStyle, NodeLabelPosition } from '../../models/graph-node.model';
@@ -337,7 +337,7 @@ export interface NodeLabelEditResult {
     }
   `]
 })
-export class NodeLabelEditDialogComponent implements OnInit {
+export class NodeLabelEditDialogComponent implements OnInit, OnChanges {
   @Input() isVisible = false;
   @Input() node: GraphNode | null = null;
   @Output() labelChanged = new EventEmitter<NodeLabelEditResult>();
@@ -374,6 +374,12 @@ export class NodeLabelEditDialogComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadNodeData();
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['node'] && this.node) {
+      this.loadNodeData();
+    }
   }
 
   private loadNodeData(): void {
