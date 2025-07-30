@@ -16,7 +16,7 @@ export interface NodeLabelBatchEditResult {
   imports: [CommonModule, FormsModule],
   template: `
     <div class="batch-label-dialog-overlay" *ngIf="isVisible" (click)="onOverlayClick()" tabindex="0">
-      <div class="batch-label-dialog" (click)="$event.stopPropagation()" tabindex="0">
+      <div class="batch-label-dialog" (click)="$event.stopPropagation()" (keydown)="onDialogKeyDown($event)" tabindex="0">
         <div class="batch-label-dialog-header">
           <h4>Edit Labels for {{ nodes.length }} Nodes</h4>
         </div>
@@ -506,6 +506,13 @@ export class NodeLabelBatchEditDialogComponent implements OnInit {
     this.onCancel();
   }
 
+  onDialogKeyDown(event: KeyboardEvent): void {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      this.onCancel();
+    }
+  }
+
   reset(): void {
     this.applyPosition = false;
     this.applyAlignment = false;
@@ -538,5 +545,13 @@ export class NodeLabelBatchEditDialogComponent implements OnInit {
     this.initializeNodeData();
     this.isVisible = true;
     this.errorMessage = '';
+    
+    // Focus the dialog container to ensure keyboard events work
+    setTimeout(() => {
+      const dialog = document.querySelector('.batch-label-dialog') as HTMLElement;
+      if (dialog) {
+        dialog.focus();
+      }
+    }, 100);
   }
 }
