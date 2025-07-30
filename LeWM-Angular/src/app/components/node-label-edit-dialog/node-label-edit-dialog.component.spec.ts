@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
+import { By } from '@angular/platform-browser';
 import { NodeLabelEditDialogComponent, NodeLabelEditResult } from './node-label-edit-dialog.component';
 import { GraphNode } from '../../models/graph-node.model';
 
@@ -179,6 +180,15 @@ describe('NodeLabelEditDialogComponent', () => {
     expect(component.onCancel).toHaveBeenCalled();
   });
 
+  it('should handle dialog-level escape key', () => {
+    spyOn(component, 'onCancel');
+    
+    const escapeEvent = new KeyboardEvent('keydown', { key: 'Escape' });
+    
+    component.onDialogKeyDown(escapeEvent);
+    expect(component.onCancel).toHaveBeenCalled();
+  });
+
   it('should close dialog when escape is pressed in the input field', () => {
     spyOn(component.cancelled, 'emit');
     
@@ -191,6 +201,35 @@ describe('NodeLabelEditDialogComponent', () => {
     
     expect(component.cancelled.emit).toHaveBeenCalled();
     expect(component.isVisible).toBe(false);
+  });
+
+  it('should close dialog when escape is pressed anywhere in the dialog', () => {
+    spyOn(component.cancelled, 'emit');
+    
+    component.show(testNode);
+    expect(component.isVisible).toBe(true);
+    
+    // Simulate escape key being pressed in the dialog container
+    const escapeEvent = new KeyboardEvent('keydown', { key: 'Escape' });
+    component.onDialogKeyDown(escapeEvent);
+    
+    expect(component.cancelled.emit).toHaveBeenCalled();
+    expect(component.isVisible).toBe(false);
+  });
+
+  it('should close dialog when close button is clicked', () => {
+    spyOn(component, 'onCancel');
+    
+    component.show(testNode);
+    fixture.detectChanges(); // Ensure the template is updated
+    expect(component.isVisible).toBe(true);
+    
+    // The close button calls onCancel() directly, so we just test that method
+    const closeButton = fixture.debugElement.query(By.css('.close-btn'));
+    expect(closeButton).toBeTruthy();
+    
+    closeButton.nativeElement.click();
+    expect(component.onCancel).toHaveBeenCalled();
   });
 
   it('should load node data when node input changes', () => {

@@ -19,6 +19,7 @@ export interface NodeLabelBatchEditResult {
       <div class="batch-label-dialog" (click)="$event.stopPropagation()" (keydown)="onDialogKeyDown($event)" tabindex="0">
         <div class="batch-label-dialog-header">
           <h4>Edit Labels for {{ nodes.length }} Nodes</h4>
+          <button class="close-btn" (click)="onCancel()" title="Close dialog">×</button>
         </div>
         <div class="batch-label-dialog-body">
           <!-- Global Position Controls -->
@@ -203,12 +204,29 @@ export interface NodeLabelBatchEditResult {
     .batch-label-dialog-header {
       padding: 1rem 1.5rem 0.5rem;
       border-bottom: 1px solid #e9ecef;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
 
     .batch-label-dialog-header h4 {
       margin: 0;
       color: #333;
       font-size: 1.1rem;
+    }
+
+    .close-btn {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: #666;
+      padding: 4px 8px;
+      transition: color 0.2s;
+    }
+
+    .close-btn:hover {
+      color: #333;
     }
 
     .batch-label-dialog-body {

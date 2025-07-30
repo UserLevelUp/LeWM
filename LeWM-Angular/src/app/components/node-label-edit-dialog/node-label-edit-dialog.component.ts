@@ -15,9 +15,10 @@ export interface NodeLabelEditResult {
   imports: [CommonModule, FormsModule],
   template: `
     <div class="label-dialog-overlay" *ngIf="isVisible" (click)="onOverlayClick()">
-      <div class="label-dialog" (click)="$event.stopPropagation()">
+      <div class="label-dialog" (click)="$event.stopPropagation()" (keydown)="onDialogKeyDown($event)" tabindex="0">
         <div class="label-dialog-header">
           <h4>Edit Node Label</h4>
+          <button class="close-btn" (click)="onCancel()" title="Close dialog">×</button>
         </div>
         <div class="label-dialog-body">
           <!-- Label Text -->
@@ -181,12 +182,29 @@ export interface NodeLabelEditResult {
     .label-dialog-header {
       padding: 1rem 1.5rem 0.5rem;
       border-bottom: 1px solid #e9ecef;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
 
     .label-dialog-header h4 {
       margin: 0;
       color: #333;
       font-size: 1.1rem;
+    }
+
+    .close-btn {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: #666;
+      padding: 4px 8px;
+      transition: color 0.2s;
+    }
+
+    .close-btn:hover {
+      color: #333;
     }
 
     .label-dialog-body {
@@ -466,6 +484,13 @@ export class NodeLabelEditDialogComponent implements OnInit, OnChanges {
     }
   }
 
+  onDialogKeyDown(event: KeyboardEvent): void {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      this.onCancel();
+    }
+  }
+
   reset(): void {
     this.labelText = '';
     this.labelWrap = false;
@@ -496,9 +521,13 @@ export class NodeLabelEditDialogComponent implements OnInit, OnChanges {
     this.isVisible = true;
     this.errorMessage = '';
     
-    // Focus and select the input for user convenience
-    // The input already has a keydown handler that processes Escape key
+    // Focus the dialog and then the input for user convenience
     setTimeout(() => {
+      const dialog = document.querySelector('.label-dialog') as HTMLElement;
+      if (dialog) {
+        dialog.focus();
+      }
+      
       const input = document.getElementById('labelText') as HTMLTextAreaElement;
       if (input) {
         input.focus();

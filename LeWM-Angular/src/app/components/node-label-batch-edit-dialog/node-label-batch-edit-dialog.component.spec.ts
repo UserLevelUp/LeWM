@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
+import { By } from '@angular/platform-browser';
 import { NodeLabelBatchEditDialogComponent, NodeLabelBatchEditResult } from './node-label-batch-edit-dialog.component';
 import { GraphNode } from '../../models/graph-node.model';
 
@@ -238,5 +239,20 @@ describe('NodeLabelBatchEditDialogComponent', () => {
     
     expect(component.cancelled.emit).toHaveBeenCalled();
     expect(component.isVisible).toBe(false);
+  });
+
+  it('should close dialog when close button is clicked', () => {
+    spyOn(component, 'onCancel');
+    
+    component.show(testNodes);
+    fixture.detectChanges(); // Ensure the template is updated
+    expect(component.isVisible).toBe(true);
+    
+    // The close button calls onCancel() directly, so we just test that method
+    const closeButton = fixture.debugElement.query(By.css('.close-btn'));
+    expect(closeButton).toBeTruthy();
+    
+    closeButton.nativeElement.click();
+    expect(component.onCancel).toHaveBeenCalled();
   });
 });
